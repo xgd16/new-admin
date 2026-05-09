@@ -1,0 +1,46 @@
+# ----- Go：编译产物 -----
+/bin/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# ----- Go：测试与覆盖率 -----
+*.test
+*.out
+coverage.html
+coverage.out
+*.coverprofile
+
+# ----- 前端 web-admin（Vite / npm） -----
+web-admin/node_modules/
+web-admin/dist/
+
+# ----- 日志与临时目录 -----
+*.log
+/logs/
+/tmp/
+
+# ----- 环境变量（示例文件保留提交） -----
+.env
+.env.*
+!.env.example
+configs/config.yaml
+
+# ----- 密钥与证书 -----
+*.pem
+*.key
+*.p12
+
+# ----- IDE / 编辑器 -----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ----- 操作系统 -----
+.DS_Store
+Thumbs.db

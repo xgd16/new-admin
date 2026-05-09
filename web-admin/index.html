@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>web-admin</title>
+    <script>
+      try {
+        var k = 'new_admin_palette';
+        var v = localStorage.getItem(k);
+        if (v === 'indigo' || v === 'rose' || v === 'emerald' || v === 'amber' || v === 'slate')
+          document.documentElement.dataset.palette = v;
+        var sb = localStorage.getItem('new_admin_scrollbar_pref');
+        document.documentElement.dataset.scrollbar =
+          sb === 'visible' || sb === 'overlay' ? sb : 'overlay';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

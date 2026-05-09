@@ -1,0 +1,60 @@
+server:
+  mode: debug          # debug | release | test
+  addr: ":8080"
+  read_timeout_sec: 30
+  write_timeout_sec: 30
+
+# 日志：可用 NEW_ADMIN_LOG_* 覆盖（见 .env.example）
+log:
+  # 级别：debug | info | warn | error
+  level: info
+
+  # 控制台
+  console_enabled: true
+  console_format: console   # console | json（debug 模式下 console 为彩色）
+  # HTTP 访问日志是否写入日志文件；false 则仅打控制台（业务日志仍按 file_* 落盘）
+  access_log_file_enabled: false
+
+  # 文件（JSON 行，便于检索/采集；可仅开控制台：file_enabled: false）
+  file_enabled: true
+  # file_path：低于 error 的日志；与 file_error_path 同时配置且展开后路径不同则拆分落盘
+  file_path: logs/{2006-01-02}.log
+  # file_error_path：error / DPanic / Panic / Fatal；留空则全部级别只写 file_path
+  file_error_path: logs/error-{2006-01-02}.log
+  file_format: json         # json | console
+  caller_enabled: true
+  stacktrace_level: error   # none 关闭；或 panic | fatal | error | warn | info | debug
+
+  # 文件轮转（file_max_size 支持单位：50M、100MB、512KB、1G…）
+  # 与 file_max_megabytes 同时存在时以 file_max_size 为准；不写 file_max_size 可仅用整数 MiB：file_max_megabytes: 50
+  file_max_size: 50M
+  file_max_backups: 10
+  file_max_age_days: 30
+  file_compress: true
+
+# 敏感项建议生产环境用 NEW_ADMIN_MYSQL_* / NEW_ADMIN_REDIS_* / NEW_ADMIN_JWT_SECRET 注入
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: "486213"
+  dbname: new_admin
+  charset: utf8mb4
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime_min: 60
+
+redis:
+  addr: 127.0.0.1:6379
+  password: "486213"
+  db: 0
+
+jwt:
+  secret: "VTfWSp8OOf4XBbjvq0Sq6yD8o2n7t58GQnzUsHWEzWj"
+  access_ttl_min: 120
+
+# 浏览器直连后端时把前端 Origin（协议+域名+端口）列入白名单；Vite 默认 5173
+cors:
+  allowed_origins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5173"
