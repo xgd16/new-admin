@@ -8,7 +8,7 @@ import { motion, motionTokens } from '../components/motionConfig'
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
-      <Text className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[color:var(--faint)] sm:w-28">
+      <Text className="shrink-0 text-xs font-semibold uppercase tracking-wider text-(--faint) sm:w-28">
         {label}
       </Text>
       <Text className="min-w-0 break-all text-sm">{value}</Text>
@@ -36,7 +36,7 @@ export function ProfilePage() {
     >
       <div className="flex max-w-2xl flex-col gap-4 sm:flex-row sm:items-start sm:gap-8">
         <div
-          className="grid size-20 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-2)] text-2xl font-bold text-white shadow-[0_16px_40px_var(--glow)] sm:size-24 sm:text-3xl"
+          className="grid size-20 shrink-0 place-items-center rounded-2xl bg-linear-to-br from-(--accent) to-(--accent-2) text-2xl font-bold text-white shadow-[0_16px_40px_var(--glow)] sm:size-24 sm:text-3xl"
           aria-hidden
         >
           {(user?.username || 'A').slice(0, 1).toUpperCase()}
@@ -57,15 +57,15 @@ export function ProfilePage() {
         <InfoRow label="角色" value={rolesLine} />
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
-          <Text className="shrink-0 text-xs font-semibold uppercase tracking-wider text-[color:var(--faint)] sm:w-28 sm:pt-0.5">
+          <Text className="shrink-0 text-xs font-semibold uppercase tracking-wider text-(--faint) sm:w-28 sm:pt-0.5">
             权限码
           </Text>
           <div className="min-w-0 flex-1">
             <Text className="text-sm">
-              共 <span className="font-semibold text-[color:var(--text)]">{permCount}</span> 项
+              共 <span className="font-semibold text-(--text)">{permCount}</span> 项
             </Text>
             {permCount > 0 ? (
-              <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 font-mono text-xs leading-relaxed text-[color:var(--muted)]">
+              <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-border bg-(--surface-soft) px-3 py-2 font-mono text-xs leading-relaxed text-muted">
                 {user!.permissions.map((p) => (
                   <div key={p}>{p}</div>
                 ))}

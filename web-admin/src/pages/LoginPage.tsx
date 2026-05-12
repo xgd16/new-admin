@@ -38,7 +38,7 @@ export function LoginPage() {
 
   return (
     <motion.main
-      className="app-shell grid min-h-svh place-items-center px-3 py-4 text-[color:var(--text)] sm:px-4 sm:py-8"
+      className="app-shell grid min-h-svh place-items-center px-3 py-4 text-(--text) sm:px-4 sm:py-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25 }}
@@ -48,13 +48,13 @@ export function LoginPage() {
       <div className="soft-grid absolute inset-x-0 top-0 h-96 opacity-50" />
 
       <motion.section
-        className="relative grid w-full max-w-6xl overflow-hidden rounded-xl border border-[color:var(--border)] shadow-[var(--shadow)] lg:grid-cols-[1.05fr_0.95fr]"
+        className="relative grid w-full max-w-6xl overflow-hidden rounded-xl border border-border shadow-(--shadow) lg:grid-cols-[1.05fr_0.95fr]"
         {...motionTokens.panel}
       >
-        <div className="glass-panel relative hidden min-h-[42rem] flex-col justify-between overflow-hidden rounded-none border-0 p-9 lg:flex">
+        <div className="glass-panel relative hidden min-h-168 flex-col justify-between overflow-hidden rounded-none border-0 p-9 lg:flex">
           <div>
             <div className="mb-16 flex items-center gap-3">
-              <div className="grid size-12 place-items-center rounded-xl bg-[color:var(--accent)] text-2xl text-white shadow-[0_16px_40px_var(--glow)]">
+              <div className="grid size-12 place-items-center rounded-xl bg-(--accent) text-2xl text-white shadow-[0_16px_40px_var(--glow)]">
                 <i className="ri-flashlight-line" />
               </div>
               <div className="flex flex-col gap-0.5">
@@ -102,7 +102,7 @@ export function LoginPage() {
         <div className="glass-panel rounded-none border-0 p-4 sm:p-8 lg:p-10">
           <div className="mb-8 flex items-center justify-between gap-4 sm:mb-10">
             <div className="flex min-w-0 items-center gap-3 lg:hidden">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[color:var(--accent)] text-xl text-white sm:size-11">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-(--accent) text-xl text-white sm:size-11">
                 <i className="ri-flashlight-line" />
               </div>
               <span className="truncate font-black tracking-[0.2em]">NEXORA</span>
@@ -113,7 +113,7 @@ export function LoginPage() {
               type="button"
               onClick={toggleTheme}
             >
-              <span className="theme-toggle-knob grid size-6 place-items-center rounded-full bg-[color:var(--accent)] text-xs text-white shadow-lg">
+              <span className="theme-toggle-knob grid size-6 place-items-center rounded-full bg-(--accent) text-xs text-white shadow-lg">
                 <i className={`${theme === 'dark' ? 'ri-moon-clear-line' : 'ri-sun-line'} leading-none`} />
               </span>
             </MotionButton>
@@ -168,7 +168,7 @@ export function LoginPage() {
 
             <div className="flex flex-col gap-2">
               <Label className="flex items-center gap-2" htmlFor="login-username">
-                <i className="ri-user-3-line text-[color:var(--accent)]" />
+                <i className="ri-user-3-line text-(--accent)" />
                 用户名
               </Label>
               <Input
@@ -221,18 +221,18 @@ export function LoginPage() {
                   </Text>
                 ) : null}
                 <div className="flex items-center gap-3 py-1">
-                  <span className="h-px flex-1 bg-[color:var(--border)]" />
+                  <span className="h-px flex-1 bg-border" />
                   <Text className="shrink-0" size="sm" variant="muted">
                     或使用密码登录
                   </Text>
-                  <span className="h-px flex-1 bg-[color:var(--border)]" />
+                  <span className="h-px flex-1 bg-border" />
                 </div>
               </div>
             ) : null}
 
             <div className="flex flex-col gap-2">
               <Label className="flex items-center gap-2" htmlFor="login-password">
-                <i className="ri-lock-password-line text-[color:var(--accent)]" />
+                <i className="ri-lock-password-line text-(--accent)" />
                 密码
               </Label>
               <Input
@@ -250,7 +250,7 @@ export function LoginPage() {
 
             <div className="flex flex-col gap-2">
               <Label className="flex items-center gap-2" htmlFor="login-captcha-code">
-                <i className="ri-shield-keyhole-line text-[color:var(--accent)]" />
+                <i className="ri-shield-keyhole-line text-(--accent)" />
                 验证码
               </Label>
               <InputGroup fullWidth className="group min-w-0 items-stretch">
@@ -264,12 +264,12 @@ export function LoginPage() {
                   onChange={(ev) => setCaptchaCode(ev.target.value.replace(/\D/g, '').slice(0, 8))}
                   disabled={busy || !captcha}
                 />
-                <InputGroup.Suffix className="!w-auto shrink-0 !px-2">
+                <InputGroup.Suffix className="w-auto! shrink-0 px-2!">
                   <button
                     type="button"
                     aria-label="点击刷新验证码"
                     title="看不清可点击验证码图片换一张"
-                    className="flex h-full min-w-[7rem] max-w-[8.5rem] flex-col items-center justify-center border-0 bg-transparent p-0 outline-none transition-opacity enabled:cursor-pointer enabled:hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] focus-visible:ring-offset-1"
+                    className="flex h-full min-w-28 max-w-34 flex-col items-center justify-center border-0 bg-transparent p-0 outline-none transition-opacity enabled:cursor-pointer enabled:hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-1"
                     disabled={busy || captchaLoading}
                     onClick={(e) => {
                       e.stopPropagation()

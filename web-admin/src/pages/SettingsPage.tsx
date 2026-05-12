@@ -61,12 +61,12 @@ function PalettePreviewStrip({ id, className = '' }: { id: PaletteId; className?
   const [a, b, c] = PALETTE_LIGHT_SWATCHES[id]
   return (
     <span
-      className={`inline-flex shrink-0 gap-px overflow-hidden rounded-md border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-px shadow-[0_1px_2px_rgba(15,23,42,0.07)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.25)] ${className}`}
+      className={`inline-flex shrink-0 gap-px overflow-hidden rounded-md border border-border bg-(--surface-strong) p-px shadow-[0_1px_2px_rgba(15,23,42,0.07)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.25)] ${className}`}
       aria-hidden
     >
-      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: a }} />
-      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: b }} />
-      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: c }} />
+      <span className="size-3.5 rounded-sm sm:size-4 sm:rounded-md" style={{ backgroundColor: a }} />
+      <span className="size-3.5 rounded-sm sm:size-4 sm:rounded-md" style={{ backgroundColor: b }} />
+      <span className="size-3.5 rounded-sm sm:size-4 sm:rounded-md" style={{ backgroundColor: c }} />
     </span>
   )
 }
@@ -191,7 +191,7 @@ export function SettingsPage() {
                   <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
                     <div className="flex flex-col py-0.5">
                       <span className="font-medium">{o.label}</span>
-                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                      <span className="text-xs text-muted">{o.hint}</span>
                     </div>
                   </ListBox.Item>
                 ))}
@@ -225,7 +225,7 @@ export function SettingsPage() {
                       <PalettePreviewStrip id={o.id} className="mt-0.5" />
                       <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{o.label}</span>
-                        <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                        <span className="text-xs text-muted">{o.hint}</span>
                       </div>
                     </div>
                   </ListBox.Item>
@@ -290,7 +290,7 @@ export function SettingsPage() {
                   <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
                     <div className="flex flex-col py-0.5">
                       <span className="font-medium">{o.label}</span>
-                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                      <span className="text-xs text-muted">{o.hint}</span>
                     </div>
                   </ListBox.Item>
                 ))}
@@ -328,7 +328,7 @@ export function SettingsPage() {
                   <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
                     <div className="flex flex-col py-0.5">
                       <span className="font-medium">{o.label}</span>
-                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                      <span className="text-xs text-muted">{o.hint}</span>
                     </div>
                   </ListBox.Item>
                 ))}
@@ -360,7 +360,7 @@ export function SettingsPage() {
                   <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
                     <div className="flex flex-col py-0.5">
                       <span className="font-medium">{o.label}</span>
-                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                      <span className="text-xs text-muted">{o.hint}</span>
                     </div>
                   </ListBox.Item>
                 ))}
@@ -373,14 +373,14 @@ export function SettingsPage() {
           title="简洁工作台布局"
           description="同时收窄大屏左侧菜单，并收紧顶栏的内边距、标题字号与操作按钮尺寸（移动端顶栏同样生效）；简洁模式下顶栏不展示页面副标题以留白。"
         >
-          <div className="settings-option-slab rounded-xl border border-[color:var(--border)] p-4 transition hover:bg-[color:var(--surface-soft)]">
+          <div className="settings-option-slab rounded-xl border border-border p-4 transition hover:bg-(--surface-soft)">
             <Checkbox isSelected={sidebarCompact} onChange={(on) => setSidebarCompact(on)}>
               <Checkbox.Control>
                 <Checkbox.Indicator />
               </Checkbox.Control>
               <Checkbox.Content>
                 <span className="block font-medium">使用简洁布局（侧栏 + 顶栏）</span>
-                <span className="mt-1 block text-sm text-[color:var(--muted)]">
+                <span className="mt-1 block text-sm text-muted">
                   开启后立即生效
                 </span>
               </Checkbox.Content>
@@ -393,7 +393,7 @@ export function SettingsPage() {
           description="仅在桌面宽度将左侧菜单收窄为图标列，点击分组图标可在旁侧展开子菜单；侧栏顶部可恢复完整菜单。手机和平板仍使用顶部折叠菜单，不受影响。开启「双栏菜单」时此项会自动关闭；若当前为单栏树形仍可单独使用。"
         >
           <div
-            className={`settings-option-slab rounded-xl border border-[color:var(--border)] p-4 transition hover:bg-[color:var(--surface-soft)] ${sidebarDual ? 'pointer-events-none opacity-55' : ''}`}
+            className={`settings-option-slab rounded-xl border border-border p-4 transition hover:bg-(--surface-soft) ${sidebarDual ? 'pointer-events-none opacity-55' : ''}`}
           >
             <Checkbox
               isSelected={sidebarFolded && !sidebarDual}
@@ -405,7 +405,7 @@ export function SettingsPage() {
               </Checkbox.Control>
               <Checkbox.Content>
                 <span className="block font-medium">默认使用仅图标侧栏</span>
-                <span className="mt-1 block text-sm text-[color:var(--muted)]">
+                <span className="mt-1 block text-sm text-muted">
                   偏好保存在本浏览器
                 </span>
               </Checkbox.Content>
@@ -451,7 +451,7 @@ export function SettingsPage() {
                   return (
                     <li
                       key={p.id}
-                      className="flex flex-col gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-3 rounded-xl border border-border bg-(--surface-soft) p-4 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0 flex flex-col gap-1">
                         <Text className="font-medium">{passkeyAttachmentLabel(p.attachment)}</Text>
@@ -563,14 +563,14 @@ export function SettingsPage() {
           title="减少界面动效"
           description="弱化过渡与动画，页面切换更快；若系统已开启「减少动态效果」，浏览器本身也会限制动效。"
         >
-          <div className="settings-option-slab rounded-xl border border-[color:var(--border)] p-4 transition hover:bg-[color:var(--surface-soft)]">
+          <div className="settings-option-slab rounded-xl border border-border p-4 transition hover:bg-(--surface-soft)">
             <Checkbox isSelected={reduceMotion} onChange={(on) => setReduceMotion(on)}>
               <Checkbox.Control>
                 <Checkbox.Indicator />
               </Checkbox.Control>
               <Checkbox.Content>
                 <span className="block font-medium">启用精简动效</span>
-                <span className="mt-1 block text-sm text-[color:var(--muted)]">
+                <span className="mt-1 block text-sm text-muted">
                   立即作用于当前标签页
                 </span>
               </Checkbox.Content>

@@ -86,6 +86,11 @@ export function OperationLogsPage() {
   const pageSize = useTablePageSize()
 
   const [page, setPage] = useState(1)
+  const [prevPageSize, setPrevPageSize] = useState(pageSize)
+  if (pageSize !== prevPageSize) {
+    setPrevPageSize(pageSize)
+    setPage(1)
+  }
   const [list, setList] = useState<OperationLogListResp['list']>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -169,17 +174,15 @@ export function OperationLogsPage() {
   }, [canRead, statsDays])
 
   useEffect(() => {
-    void loadStats()
+    const t = window.setTimeout(() => void loadStats(), 0)
+    return () => window.clearTimeout(t)
   }, [loadStats])
 
   const statsDayMax = useMemo(() => {
-    if (!stats?.by_day?.length) return 1
-    return Math.max(1, ...stats.by_day.map((d) => d.count))
-  }, [stats?.by_day])
-
-  useEffect(() => {
-    setPage(1)
-  }, [pageSize])
+    const byDay = stats?.by_day
+    if (!byDay?.length) return 1
+    return Math.max(1, ...byDay.map((d) => d.count))
+  }, [stats])
 
   const keywordPlaceholder = useMemo(() => {
     switch (draftField) {
@@ -234,7 +237,8 @@ export function OperationLogsPage() {
   }, [refreshProfile])
 
   useEffect(() => {
-    void load()
+    const t = window.setTimeout(() => void load(), 0)
+    return () => window.clearTimeout(t)
   }, [load])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
@@ -278,7 +282,7 @@ export function OperationLogsPage() {
       {
         id: 'created_at',
         header: '时间',
-        cellClassName: 'max-w-[9rem] whitespace-nowrap tabular-nums text-[color:var(--muted)]',
+        cellClassName: 'max-w-[9rem] whitespace-nowrap tabular-nums text-muted',
         render: (row) => (row.created_at ? new Date(row.created_at).toLocaleString('zh-CN') : '—'),
       },
       {
@@ -299,7 +303,7 @@ export function OperationLogsPage() {
         id: 'method',
         header: '方法',
         render: (row) => (
-          <span className="rounded-md bg-[color:var(--accent)]/12 px-1.5 py-0.5 font-mono text-xs font-semibold text-[color:var(--accent)]">
+          <span className="rounded-md bg-(--accent)/12 px-1.5 py-0.5 font-mono text-xs font-semibold text-(--accent)">
             {row.method}
           </span>
         ),
@@ -307,7 +311,7 @@ export function OperationLogsPage() {
       {
         id: 'path',
         header: '路径',
-        cellClassName: 'max-w-[20rem] font-mono text-xs text-[color:var(--muted)]',
+        cellClassName: 'max-w-[20rem] font-mono text-xs text-muted',
         render: (row) => (
           <>
             <span className="line-clamp-2">{row.path}</span>
@@ -323,9 +327,9 @@ export function OperationLogsPage() {
           <span
             className={
               row.status_code >= 200 && row.status_code < 300
-                ? 'text-[color:var(--accent)]'
+                ? 'text-(--accent)'
                 : row.status_code >= 400
-                  ? 'text-[color:var(--danger)]'
+                  ? 'text-(--danger)'
                   : ''
             }
           >
@@ -336,13 +340,13 @@ export function OperationLogsPage() {
       {
         id: 'duration_ms',
         header: '耗时 ms',
-        cellClassName: 'tabular-nums text-[color:var(--muted)]',
+        cellClassName: 'tabular-nums text-muted',
         render: (row) => row.duration_ms,
       },
       {
         id: 'ip',
         header: 'IP',
-        cellClassName: 'max-w-[9rem] font-mono text-xs text-[color:var(--muted)]',
+        cellClassName: 'max-w-[9rem] font-mono text-xs text-muted',
         render: (row) => row.ip,
       },
     ]
@@ -424,7 +428,7 @@ export function OperationLogsPage() {
               {([7, 14, 30, 90] as const).map((d) => (
                 <Button
                   key={d}
-                  className="min-w-[4.5rem]"
+                  className="min-w-18"
                   variant={statsDays === d ? 'primary' : 'secondary'}
                   onPress={() => setStatsDays(d)}
                 >
@@ -439,13 +443,13 @@ export function OperationLogsPage() {
           ) : stats ? (
             <div className="flex flex-col gap-6">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]/45 px-4 py-3">
+                <div className="rounded-xl border border-border bg-(--surface-soft)/45 px-4 py-3">
                   <Text size="sm" variant="muted">
                     窗口内操作数
                   </Text>
                   <div className="mt-1 text-2xl font-black tabular-nums">{stats.total_in_range}</div>
                 </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]/45 px-4 py-3">
+                <div className="rounded-xl border border-border bg-(--surface-soft)/45 px-4 py-3">
                   <Text size="sm" variant="muted">
                     平均耗时
                   </Text>
@@ -453,7 +457,7 @@ export function OperationLogsPage() {
                     {Math.round(stats.avg_duration_ms)} ms
                   </div>
                 </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)]/45 px-4 py-3 sm:col-span-2 lg:col-span-2">
+                <div className="rounded-xl border border-border bg-(--surface-soft)/45 px-4 py-3 sm:col-span-2 lg:col-span-2">
                   <Text size="sm" variant="muted">
                     {listTotalCaption}
                   </Text>
@@ -469,10 +473,10 @@ export function OperationLogsPage() {
                       stats.by_method.map((m) => (
                         <span
                           key={m.key}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-strong)]/80 px-2.5 py-1 font-mono text-xs font-semibold"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-(--surface-strong)/80 px-2.5 py-1 font-mono text-xs font-semibold"
                         >
                           {m.key}
-                          <span className="tabular-nums text-[color:var(--muted)]">{m.count}</span>
+                          <span className="tabular-nums text-muted">{m.count}</span>
                         </span>
                       ))
                     ) : (
@@ -491,10 +495,10 @@ export function OperationLogsPage() {
                           key={b.key}
                           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold ${
                             b.key === '4xx' || b.key === '5xx'
-                              ? 'border-[color:var(--danger)]/35 bg-[color:var(--danger)]/10 text-[color:var(--danger)]'
+                              ? 'border-(--danger)/35 bg-(--danger)/10 text-(--danger)'
                               : b.key === '2xx'
-                                ? 'border-[color:var(--accent)]/35 bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-                                : 'border-[color:var(--border)] bg-[color:var(--surface-strong)]/80'
+                                ? 'border-(--accent)/35 bg-(--accent)/10 text-(--accent)'
+                                : 'border-border bg-(--surface-strong)/80'
                           }`}
                         >
                           {b.key}
@@ -516,12 +520,12 @@ export function OperationLogsPage() {
                   <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
                     {stats.by_day.map((d) => (
                       <div key={d.date} className="flex min-h-0 items-center gap-2 text-sm">
-                        <span className="w-[8.5rem] shrink-0 whitespace-nowrap tabular-nums text-[color:var(--muted)]">
+                        <span className="w-34 shrink-0 whitespace-nowrap tabular-nums text-muted">
                           {formatOpLogDateOnly(d.date)}
                         </span>
-                        <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[color:var(--border)]/50">
+                        <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-(--border)/50">
                           <div
-                            className="h-full rounded-full bg-[color:var(--accent)]"
+                            className="h-full rounded-full bg-(--accent)"
                             style={{ width: `${Math.min(100, (d.count / statsDayMax) * 100)}%` }}
                           />
                         </div>
@@ -543,12 +547,12 @@ export function OperationLogsPage() {
                     {stats.top_users.map((u, i) => (
                       <li
                         key={`${u.user_id}-${i}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-soft)]/40 px-3 py-2"
+                        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-(--surface-soft)/40 px-3 py-2"
                       >
                         <span className="min-w-0 truncate font-medium">
                           {u.username || `#${u.user_id}`}
                         </span>
-                        <span className="shrink-0 tabular-nums text-[color:var(--muted)]">{u.count} 次</span>
+                        <span className="shrink-0 tabular-nums text-muted">{u.count} 次</span>
                       </li>
                     ))}
                   </ul>

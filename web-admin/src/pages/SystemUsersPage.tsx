@@ -76,7 +76,7 @@ function RoleSelect({
 }) {
   if (roles.length === 0) {
     return (
-      <div className="rounded-xl border border-[color:var(--border)] p-3">
+      <div className="rounded-xl border border-border p-3">
         <Text size="sm" variant="muted">
           无法加载角色列表（需 system:role:read）
         </Text>
@@ -104,7 +104,7 @@ function RoleSelect({
             <ListBox.Item key={r.id} id={String(r.id)} textValue={`${r.name} ${r.code}`}>
               <div className="flex flex-col">
                 <span className="font-medium">{r.name}</span>
-                <span className="text-xs text-[color:var(--muted)]">{r.code}</span>
+                <span className="text-xs text-muted">{r.code}</span>
               </div>
             </ListBox.Item>
           ))}
@@ -122,6 +122,11 @@ export function SystemUsersPage() {
   const pageSize = useTablePageSize()
 
   const [page, setPage] = useState(1)
+  const [prevPageSize, setPrevPageSize] = useState(pageSize)
+  if (pageSize !== prevPageSize) {
+    setPrevPageSize(pageSize)
+    setPage(1)
+  }
   const [list, setList] = useState<SystemUserListResp['list']>([])
   const [total, setTotal] = useState(0)
   const [rolesCatalog, setRolesCatalog] = useState<SystemRoleItem[]>([])
@@ -207,10 +212,6 @@ export function SystemUsersPage() {
     }
     setListError(envelope.message || '加载失败')
   }, [canRead, page, pageSize, appliedQ, appliedStatus, appliedRoleId, appliedFrom, appliedTo])
-
-  useEffect(() => {
-    setPage(1)
-  }, [pageSize])
 
   useEffect(() => {
     setDashboardRefresh(() => loadUsers)
@@ -444,7 +445,7 @@ export function SystemUsersPage() {
                     <ListBox.Item key={r.id} id={String(r.id)} textValue={`${r.name} ${r.code}`}>
                       <div className="flex flex-col">
                         <span className="font-medium">{r.name}</span>
-                        <span className="text-xs text-[color:var(--muted)]">{r.code}</span>
+                        <span className="text-xs text-muted">{r.code}</span>
                       </div>
                     </ListBox.Item>
                   ))}
@@ -463,7 +464,7 @@ export function SystemUsersPage() {
               aria-label="按创建日期范围筛选"
               className="min-w-0 w-full max-w-full"
             >
-              <Group className="group flex min-h-[36px] w-full min-w-0 flex-wrap items-stretch rounded-field border border-[color:var(--color-field-border)] bg-field px-1.5 shadow-field outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:bg-field-hover focus-within:border-[color:var(--color-field-border-focus)] focus-within:bg-[color:var(--color-field-focus)] focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-0">
+              <Group className="group flex min-h-9 w-full min-w-0 flex-wrap items-stretch rounded-field border border-(--color-field-border) bg-field px-1.5 shadow-field outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:bg-field-hover focus-within:border-(--color-field-border-focus) focus-within:bg-(--color-field-focus) focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-0">
                 <DateInput slot="start" className="inline-flex min-w-0 flex-1 flex-nowrap items-center gap-0.5 px-1 py-1 text-sm outline-none">
                   {(segment) => <DateSegment segment={segment} className="rounded px-0.5 text-field-foreground tabular-nums outline-none focus:bg-accent focus:text-white" />}
                 </DateInput>
@@ -526,7 +527,7 @@ export function SystemUsersPage() {
             {
               id: 'id',
               header: 'ID',
-              cellClassName: 'tabular-nums text-[color:var(--muted)]',
+              cellClassName: 'tabular-nums text-muted',
               render: (row) => row.id,
             },
             {
@@ -543,8 +544,8 @@ export function SystemUsersPage() {
                 <span
                   className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                     row.status === 1
-                      ? 'bg-[color:var(--accent)]/15 text-[color:var(--accent)]'
-                      : 'bg-[color:var(--danger)]/10 text-[color:var(--danger)]'
+                      ? 'bg-accent-soft text-(--accent)'
+                      : 'bg-(--danger)/10 text-(--danger)'
                   }`}
                 >
                   {row.status === 1 ? '启用' : '禁用'}
@@ -554,19 +555,19 @@ export function SystemUsersPage() {
             {
               id: 'roles',
               header: '角色',
-              cellClassName: 'max-w-[12rem] text-[color:var(--muted)]',
+              cellClassName: 'max-w-[12rem] text-muted',
               render: (row) => <span className="line-clamp-2">{row.roles?.join(', ') || '—'}</span>,
             },
             {
               id: 'created_at',
               header: '创建时间',
-              cellClassName: 'text-[color:var(--muted)]',
+              cellClassName: 'text-muted',
               render: (row) => (row.created_at ? new Date(row.created_at).toLocaleString('zh-CN') : '—'),
             },
             {
               id: 'last_login_at',
               header: '最后登录',
-              cellClassName: 'text-[color:var(--muted)]',
+              cellClassName: 'text-muted',
               render: (row) => (row.last_login_at ? new Date(row.last_login_at).toLocaleString('zh-CN') : '—'),
             },
             {
@@ -704,7 +705,7 @@ export function SystemUsersPage() {
             ) : (
               <>
                 <div className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-strong)]/40 px-3 py-2">
+                  <div className="flex flex-col gap-1 rounded-xl border border-border bg-(--surface-strong)/40 px-3 py-2">
                     <Text size="sm" variant="muted">
                       最后登录
                     </Text>

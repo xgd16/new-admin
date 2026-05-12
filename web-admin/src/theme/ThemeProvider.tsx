@@ -43,10 +43,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener('change', onChange)
   }, [preference])
 
-  const theme = useMemo(
-    () => resolveEffectiveTheme(preference),
-    [preference, systemEpoch],
-  )
+  const theme = useMemo(() => {
+    // systemEpoch：仅在 preference === 'system' 时随 OS 主题变化递增，用于触发重新解析
+    void systemEpoch
+    return resolveEffectiveTheme(preference)
+  }, [preference, systemEpoch])
 
   useEffect(() => {
     const root = document.documentElement

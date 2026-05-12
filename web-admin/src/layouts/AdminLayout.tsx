@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -81,7 +80,7 @@ export function AdminLayout() {
       : 'rounded-xl p-4'
 
   return (
-    <main className={`app-shell admin-fixed-layout flex h-svh max-h-svh min-h-0 w-full flex-col overflow-hidden px-2 py-3 text-[color:var(--text)] sm:px-3 sm:py-5 lg:px-4 nav-style-${sidebarNavStyle}`}>
+    <main className={`app-shell admin-fixed-layout flex h-svh max-h-svh min-h-0 w-full flex-col overflow-hidden px-2 py-3 text-(--text) sm:px-3 sm:py-5 lg:px-4 nav-style-${sidebarNavStyle}`}>
       <div className="orb orb-primary -left-32 top-10" />
       <div className="orb orb-cyan -right-24 top-24" />
       <div className="soft-grid pointer-events-none absolute inset-x-0 top-0 h-80 opacity-45" />
@@ -106,14 +105,14 @@ export function AdminLayout() {
             <>
           {sidebarIconRail ? (
             <div className="flex flex-col items-center gap-2 py-2">
-              <div className="grid size-10 place-items-center rounded-xl bg-[color:var(--accent)] text-lg text-white shadow-[0_16px_40px_var(--glow)]">
+              <div className="grid size-10 place-items-center rounded-xl bg-(--accent) text-lg text-white shadow-[0_16px_40px_var(--glow)]">
                 <i className="ri-flashlight-line" />
               </div>
               <MotionButton
                 type="button"
                 title="展开完整菜单"
                 aria-label="展开完整菜单"
-                className="grid size-9 shrink-0 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--text)]"
+                className="grid size-9 shrink-0 place-items-center rounded-full text-muted transition hover:bg-(--surface-strong) hover:text-(--text)"
                 onClick={() => setSidebarFolded(false)}
               >
                 <i className="ri-menu-unfold-line text-lg" />
@@ -123,7 +122,7 @@ export function AdminLayout() {
             <div className={`flex items-start justify-between gap-2 px-2 ${sidebarCompact ? 'py-2' : 'py-3'}`}>
               <div className={`flex min-w-0 flex-1 items-center ${sidebarCompact ? 'gap-2' : 'gap-3'}`}>
                 <div
-                  className={`grid place-items-center bg-[color:var(--accent)] text-white shadow-[0_16px_40px_var(--glow)] ${sidebarCompact ? 'size-9 rounded-xl text-lg' : 'size-11 rounded-xl text-xl'}`}
+                  className={`grid place-items-center bg-(--accent) text-white shadow-[0_16px_40px_var(--glow)] ${sidebarCompact ? 'size-9 rounded-xl text-lg' : 'size-11 rounded-xl text-xl'}`}
                 >
                   <i className="ri-flashlight-line" />
                 </div>
@@ -142,7 +141,7 @@ export function AdminLayout() {
                 type="button"
                 title="仅显示图标"
                 aria-label="左侧菜单仅显示图标"
-                className={`hidden shrink-0 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--text)] lg:grid ${sidebarCompact ? 'size-8' : 'size-9'}`}
+                className={`hidden shrink-0 place-items-center rounded-full text-muted transition hover:bg-(--surface-strong) hover:text-(--text) lg:grid ${sidebarCompact ? 'size-8' : 'size-9'}`}
                 onClick={() => setSidebarFolded(true)}
               >
                 <i className={sidebarCompact ? 'ri-menu-fold-line text-base' : 'ri-menu-fold-line text-lg'} />
@@ -206,7 +205,7 @@ export function AdminLayout() {
               )}
             </div>
             <div
-              className={`shrink-0 border-t border-[color:var(--border)] ${sidebarIconRail ? 'mt-2 pt-2' : sidebarCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}
+              className={`shrink-0 border-t border-border ${sidebarIconRail ? 'mt-2 pt-2' : sidebarCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}
             >
               {sidebarIconRail ? (
                 <NavLink
@@ -265,8 +264,8 @@ export function AdminLayout() {
               >
                 <div className="glass-panel -mx-1 mb-2 mt-1 flex flex-col gap-3 rounded-xl p-2">
                   <div className="flex items-center gap-2 px-2 pb-1 pt-1">
-                    <i className={`${sidebarNavRoot.icon} text-base text-[color:var(--accent)]`} />
-                    <span className="text-sm font-bold uppercase tracking-wider text-[color:var(--faint)]">
+                    <i className={`${sidebarNavRoot.icon} text-base text-(--accent)`} />
+                    <span className="text-sm font-bold uppercase tracking-wider text-(--faint)">
                       {sidebarNavRoot.label}
                     </span>
                   </div>
@@ -278,7 +277,7 @@ export function AdminLayout() {
                         )}
                       </div>
                     ))}
-                    <div className="border-t border-[color:var(--border)] pt-3">
+                    <div className="border-t border-border pt-3">
                       <NavLink
                         className={({ isActive }) =>
                           `nav-item flex w-fit shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'nav-item-active' : ''}`
@@ -331,12 +330,14 @@ function DualColumnSidebar({
     () => dualSidebarSegmentForPath(navRoot.children, pathname),
     [navRoot.children, pathname],
   )
-  const [segmentOverride, setSegmentOverride] = useState<DualSidebarMainSegment | null>(null)
-  useEffect(() => {
-    setSegmentOverride(null)
-  }, [pathname])
-
-  const seg = segmentOverride ?? pathSegment
+  const [segmentOverride, setSegmentOverride] = useState<{
+    segment: DualSidebarMainSegment
+    pathname: string
+  } | null>(null)
+  const seg =
+    segmentOverride != null && segmentOverride.pathname === pathname
+      ? segmentOverride.segment
+      : pathSegment
   /** 仅有多级子项的分组才展开右栏；一级叶子与底部「系统设置」均为单入口，避免重复子栏 */
   const showSubColumn = seg.kind === 'group'
   const subColWidth = compact ? 'w-[10.5rem]' : 'w-[13rem]'
@@ -348,10 +349,10 @@ function DualColumnSidebar({
   return (
     <>
       <div
-        className={`flex h-full shrink-0 flex-col border-e pb-2 pl-3 pr-2.5 pt-3.5 transition-colors duration-300 ${mainRailW} ${showSubColumn ? 'border-[color:var(--border)]' : 'border-transparent'}`}
+        className={`flex h-full shrink-0 flex-col border-e pb-2 pl-3 pr-2.5 pt-3.5 transition-colors duration-300 ${mainRailW} ${showSubColumn ? 'border-border' : 'border-transparent'}`}
       >
         <div className="flex shrink-0 justify-center">
-          <div className="grid size-10 place-items-center rounded-xl bg-[color:var(--accent)] text-lg text-white shadow-[0_16px_40px_var(--glow)]">
+          <div className="grid size-10 place-items-center rounded-xl bg-(--accent) text-lg text-white shadow-[0_16px_40px_var(--glow)]">
             <i className="ri-flashlight-line" />
           </div>
         </div>
@@ -365,7 +366,7 @@ function DualColumnSidebar({
                 aria-label={node.label}
                 aria-current={seg.kind === 'group' && seg.group.id === node.id ? 'true' : undefined}
                 className={`${mainRailBtn} ${seg.kind === 'group' && seg.group.id === node.id ? 'nav-item-active' : ''}`}
-                onClick={() => setSegmentOverride({ kind: 'group', group: node })}
+                onClick={() => setSegmentOverride({ segment: { kind: 'group', group: node }, pathname })}
               >
                 <i className={`${node.icon} text-lg`} />
                 <span className={mainRailLabel}>{node.label}</span>
@@ -391,7 +392,7 @@ function DualColumnSidebar({
             ),
           )}
         </nav>
-        <div className="mt-auto shrink-0 border-t border-[color:var(--border)] pt-2">
+        <div className="mt-auto shrink-0 border-t border-border pt-2">
           <NavLink
             title={ADMIN_SIDEBAR_FOOTER_LINK.label}
             aria-label={ADMIN_SIDEBAR_FOOTER_LINK.label}
@@ -413,8 +414,8 @@ function DualColumnSidebar({
             className="flex h-full shrink-0 overflow-hidden"
           >
             <div className={`flex h-full min-w-0 ${subColWidth} shrink-0 flex-col ${compact ? 'py-2' : 'py-3'}`}>
-              <div className="shrink-0 border-b border-[color:var(--border)] px-3 pb-2">
-                <Text className="text-xs font-bold uppercase tracking-wider text-[color:var(--faint)]">
+              <div className="shrink-0 border-b border-border px-3 pb-2">
+                <Text className="text-xs font-bold uppercase tracking-wider text-(--faint)">
                   {seg.group.label}
                 </Text>
               </div>
@@ -439,7 +440,7 @@ function RailFlyoutSection({ nodes, pathname }: { nodes: AdminNavNode[]; pathnam
       {nodes.map((node) =>
         isNavGroup(node) ? (
           <div key={node.id} className="flex flex-col gap-0.5 pt-1 first:pt-0">
-            <div className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-[color:var(--faint)]">
+            <div className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-(--faint)">
               {node.label}
             </div>
             <RailFlyoutSection nodes={node.children} pathname={pathname} />
@@ -477,9 +478,9 @@ function SidebarRailGroup({ group, pathname }: { group: AdminNavGroup; pathname:
         placement="right top"
         className="max-h-[min(70vh,28rem)] overflow-hidden rounded-xl p-0 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
       >
-        <Popover.Dialog className="glass-panel min-w-[13.75rem] max-w-[min(90vw,18rem)] outline-none">
-          <div className="border-b border-[color:var(--border)] px-3 py-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[color:var(--faint)]">
+        <Popover.Dialog className="glass-panel min-w-55 max-w-[min(90vw,18rem)] outline-none">
+          <div className="border-b border-border px-3 py-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-(--faint)">
               {group.label}
             </span>
           </div>
@@ -518,7 +519,7 @@ function renderMobileNavNode(
   }
   return (
     <div className="flex w-full flex-col gap-1.5">
-      <span className="px-1 text-sm font-bold uppercase tracking-wider text-[color:var(--faint)]">
+      <span className="px-1 text-sm font-bold uppercase tracking-wider text-(--faint)">
         {node.label}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -551,8 +552,8 @@ function SidebarNavGroup({
   const arrowCls = compact ? 'text-base' : 'text-lg'
   const innerCls = compact ? 'flex items-center gap-2' : 'flex items-center gap-3'
   const nestCls = compact
-    ? 'ml-1 flex flex-col gap-0.5 overflow-hidden border-l border-[color:var(--border)] pl-2 pr-1'
-    : 'ml-2 flex flex-col gap-1 overflow-hidden border-l border-[color:var(--border)] pl-3 pr-2'
+    ? 'ml-1 flex flex-col gap-0.5 overflow-hidden border-l border-border pl-2 pr-1'
+    : 'ml-2 flex flex-col gap-1 overflow-hidden border-l border-border pl-3 pr-2'
   const leafCls = compact
     ? 'nav-item flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left !text-sm font-medium'
     : 'nav-item flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left !text-sm font-medium'
@@ -641,31 +642,31 @@ function AdminHeader({
     : 'glass-panel flex items-center justify-between gap-4 rounded-xl px-4 py-3 sm:px-5'
   const brandGap = compact ? 'gap-2' : 'gap-3'
   const mobileLogo = compact
-    ? 'grid size-8 shrink-0 place-items-center rounded-lg bg-[color:var(--accent)] text-white lg:hidden'
-    : 'grid size-10 shrink-0 place-items-center rounded-xl bg-[color:var(--accent)] text-white lg:hidden'
+    ? 'grid size-8 shrink-0 place-items-center rounded-lg bg-(--accent) text-white lg:hidden'
+    : 'grid size-10 shrink-0 place-items-center rounded-xl bg-(--accent) text-white lg:hidden'
   const mobileLogoIcon = compact ? 'ri-flashlight-line text-base' : 'ri-flashlight-line text-lg'
   const titleCls = compact
     ? 'text-lg font-black tracking-tight sm:text-xl'
     : 'text-xl font-black tracking-tight sm:text-2xl'
   const badgeCls = compact
-    ? 'rounded bg-[color:var(--accent)]/10 px-1.5 py-px text-[10px] font-semibold leading-tight text-[color:var(--accent)]'
-    : 'rounded-md bg-[color:var(--accent)]/10 px-2 py-0.5 text-xs font-semibold text-[color:var(--accent)]'
+    ? 'rounded bg-(--accent)/10 px-1.5 py-px text-[10px] font-semibold leading-tight text-(--accent)'
+    : 'rounded-md bg-(--accent)/10 px-2 py-0.5 text-xs font-semibold text-(--accent)'
   const toolbarWrap = compact ? 'flex shrink-0 items-center gap-1.5 sm:gap-3' : 'flex shrink-0 items-center gap-2 sm:gap-4'
   const iconBtnWrap = compact ? 'flex items-center gap-0.5 sm:gap-1.5' : 'flex items-center gap-1 sm:gap-2'
   const iconBtn = compact
-    ? 'grid size-8 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--text)]'
-    : 'grid size-9 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--text)]'
+    ? 'grid size-8 place-items-center rounded-full text-muted transition hover:bg-(--surface-strong) hover:text-(--text)'
+    : 'grid size-9 place-items-center rounded-full text-muted transition hover:bg-(--surface-strong) hover:text-(--text)'
   const iconBtnGlyph = compact ? 'text-base' : 'text-lg'
-  const divider = compact ? 'hidden h-6 w-px bg-[color:var(--border)] sm:block' : 'hidden h-8 w-px bg-[color:var(--border)] sm:block'
+  const divider = compact ? 'hidden h-6 w-px bg-(--border) sm:block' : 'hidden h-8 w-px bg-(--border) sm:block'
   const userCluster = compact ? 'flex items-center gap-2' : 'flex items-center gap-3'
   const userNameCls = compact ? 'text-xs font-bold leading-tight' : 'text-sm font-bold leading-tight'
   const userRolesCls = compact ? 'text-[10px] leading-tight' : 'text-xs leading-tight'
   const avatar = compact
-    ? 'grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-2)] text-xs font-bold text-white shadow-sm ring-2 ring-white/20'
-    : 'grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-2)] text-sm font-bold text-white shadow-sm ring-2 ring-white/20'
+    ? 'grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-(--accent) to-(--accent-2) text-xs font-bold text-white shadow-sm ring-2 ring-white/20'
+    : 'grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-(--accent) to-(--accent-2) text-sm font-bold text-white shadow-sm ring-2 ring-white/20'
   const logoutBtn = compact
-    ? 'grid size-8 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--danger)]/10 hover:text-[color:var(--danger)]'
-    : 'grid size-9 place-items-center rounded-full text-[color:var(--muted)] transition hover:bg-[color:var(--danger)]/10 hover:text-[color:var(--danger)]'
+    ? 'grid size-8 place-items-center rounded-full text-muted transition hover:bg-(--danger)/10 hover:text-(--danger)'
+    : 'grid size-9 place-items-center rounded-full text-muted transition hover:bg-(--danger)/10 hover:text-(--danger)'
   const titleTransition = { duration: 0.14 } as const
   const titleAccentTransition = { duration: 0.12, delay: 0.02 } as const
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
@@ -699,7 +700,7 @@ function AdminHeader({
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 sm:gap-x-3">
                 <Text className={`${titleCls} shrink-0`}>{pageMeta.titleEn}</Text>
                 <span
-                  className="hidden shrink-0 select-none text-sm leading-none text-[color:var(--faint)] sm:inline"
+                  className="hidden shrink-0 select-none text-sm leading-none text-(--faint) sm:inline"
                   aria-hidden
                 >
                   ·
@@ -745,7 +746,7 @@ function AdminHeader({
             to="/profile"
             title="个人中心"
             aria-label="个人中心"
-            className={`flex min-w-0 items-center rounded-xl py-1 pl-1 pr-2 no-underline outline-none transition hover:bg-[color:var(--surface-soft)] focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] ${compact ? 'gap-2' : 'gap-3'}`}
+            className={`flex min-w-0 items-center rounded-xl py-1 pl-1 pr-2 no-underline outline-none transition hover:bg-(--surface-soft) focus-visible:ring-2 focus-visible:ring-(--accent) ${compact ? 'gap-2' : 'gap-3'}`}
           >
             <div className="hidden min-w-0 flex-col items-end gap-0.5 sm:flex">
               <Text className={userNameCls}>{user?.username || 'Admin'}</Text>
