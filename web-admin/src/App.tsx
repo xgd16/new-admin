@@ -17,6 +17,7 @@ import { FrontUsersPage } from './pages/FrontUsersPage'
 import { LoginPage } from './pages/LoginPage'
 import { OperationLogsPage } from './pages/OperationLogsPage'
 import { OverviewPage } from './pages/OverviewPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SystemRolesPage } from './pages/SystemRolesPage'
 import { SystemUsersPage } from './pages/SystemUsersPage'
@@ -69,6 +70,7 @@ function AppRoutes() {
         { path: 'system/users', element: <SystemUsersPage /> },
         { path: 'system/roles', element: <SystemRolesPage /> },
         { path: 'system/operation-logs', element: <OperationLogsPage /> },
+        { path: 'profile', element: <ProfilePage /> },
         { path: 'settings', element: <SettingsPage /> },
       ],
     },

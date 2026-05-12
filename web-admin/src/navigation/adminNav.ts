@@ -38,6 +38,9 @@ export type DualSidebarMainSegment =
   | { kind: 'footer' }
 
 export function dualSidebarSegmentForPath(nodes: AdminNavNode[], pathname: string): DualSidebarMainSegment {
+  if (pathMatchesLeaf(pathname, PROFILE_LEAF.path)) {
+    return { kind: 'leaf', leaf: PROFILE_LEAF }
+  }
   if (pathMatchesLeaf(pathname, ADMIN_SIDEBAR_FOOTER_LINK.path)) {
     return { kind: 'footer' }
   }
@@ -52,6 +55,15 @@ export function dualSidebarSegmentForPath(nodes: AdminNavNode[], pathname: strin
   if (!first) return { kind: 'footer' }
   if (!isNavGroup(first)) return { kind: 'leaf', leaf: first }
   return { kind: 'group', group: first }
+}
+
+/** 顶栏入口，不参与侧栏树；`flattenNavLeaves` 纳入以便顶栏标题解析 */
+export const PROFILE_LEAF: AdminNavLeaf = {
+  path: '/profile',
+  label: '个人中心',
+  icon: 'ri-user-3-line',
+  titleEn: 'Profile',
+  subtitle: '当前账号信息与权限概览',
 }
 
 /** 固定在侧边栏底部的入口（不参与分组折叠树） */
@@ -143,6 +155,7 @@ function walkLeaves(nodes: AdminNavNode[], out: AdminNavLeaf[]) {
 export function flattenNavLeaves(nodes: AdminNavNode[] = ADMIN_NAV): AdminNavLeaf[] {
   const out: AdminNavLeaf[] = []
   walkLeaves(nodes, out)
+  out.push(PROFILE_LEAF)
   out.push(ADMIN_SIDEBAR_FOOTER_LINK)
   return out
 }

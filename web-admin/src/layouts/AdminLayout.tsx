@@ -16,6 +16,7 @@ import { MotionButton } from '../components/Motion'
 import { AnimatePresence, motion, motionTokens } from '../components/motionConfig'
 import {
   ADMIN_SIDEBAR_FOOTER_LINK,
+  PROFILE_LEAF,
   dualSidebarSegmentForPath,
   filterNavByPermissions,
   getBackendNavRoot,
@@ -268,6 +269,16 @@ export function AdminLayout() {
                       <NavLink
                         className={({ isActive }) =>
                           `nav-item flex w-fit shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'nav-item-active' : ''}`
+                        }
+                        onClick={() => setMobileMenuOpen(false)}
+                        to={PROFILE_LEAF.path}
+                      >
+                        <i className={`${PROFILE_LEAF.icon} text-base`} />
+                        <span>{PROFILE_LEAF.label}</span>
+                      </NavLink>
+                      <NavLink
+                        className={({ isActive }) =>
+                          `nav-item mt-2 flex w-fit shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'nav-item-active' : ''}`
                         }
                         onClick={() => setMobileMenuOpen(false)}
                         to={ADMIN_SIDEBAR_FOOTER_LINK.path}
@@ -698,14 +709,21 @@ function AdminHeader({
 
         <div className={divider} />
 
-        <div className={userCluster}>
-          <div className="hidden flex-col items-end gap-0.5 sm:flex">
-            <Text className={userNameCls}>{user?.username || 'Admin'}</Text>
-            <Text className={userRolesCls} variant="muted">
-              {user?.roles?.length ? user.roles.join(' · ') : '暂无角色'}
-            </Text>
-          </div>
-          <div className={avatar}>{(user?.username || 'A').slice(0, 1).toUpperCase()}</div>
+        <div className={`${userCluster} items-center`}>
+          <NavLink
+            to="/profile"
+            title="个人中心"
+            aria-label="个人中心"
+            className={`flex min-w-0 items-center rounded-xl py-1 pl-1 pr-2 no-underline outline-none transition hover:bg-[color:var(--surface-soft)] focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] ${compact ? 'gap-2' : 'gap-3'}`}
+          >
+            <div className="hidden min-w-0 flex-col items-end gap-0.5 sm:flex">
+              <Text className={userNameCls}>{user?.username || 'Admin'}</Text>
+              <Text className={userRolesCls} variant="muted">
+                {user?.roles?.length ? user.roles.join(' · ') : '暂无角色'}
+              </Text>
+            </div>
+            <div className={avatar}>{(user?.username || 'A').slice(0, 1).toUpperCase()}</div>
+          </NavLink>
           <MotionButton
             className={logoutBtn}
             onClick={() => setLogoutConfirmOpen(true)}

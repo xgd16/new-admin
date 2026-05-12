@@ -60,6 +60,15 @@ type CORS struct {
 	AllowedOrigins []string `mapstructure:"allowed_origins"`
 }
 
+// Static 本地静态文件目录（相对进程工作目录或绝对路径）。
+// 上传目录须登录后访问；公开目录无需认证。
+type Static struct {
+	// UploadRoot 服务端本地上传文件根目录；非空时挂载到 /admin/v1/uploads/，须 Bearer JWT。
+	UploadRoot string `mapstructure:"upload_root"`
+	// PublicRoot 公开静态资源根目录；非空时挂载到 /public/v1/，匿名可访问。
+	PublicRoot string `mapstructure:"public_root"`
+}
+
 type Config struct {
 	Server Server `mapstructure:"server"`
 	Log    Log    `mapstructure:"log"`
@@ -67,6 +76,7 @@ type Config struct {
 	Redis  Redis  `mapstructure:"redis"`
 	JWT    JWT    `mapstructure:"jwt"`
 	CORS   CORS   `mapstructure:"cors"`
+	Static Static `mapstructure:"static"`
 }
 
 func Load(configPath string) (*Config, error) {
@@ -144,6 +154,9 @@ func Load(configPath string) (*Config, error) {
 			"http://127.0.0.1:5173",
 		}
 	}
+
+	cfg.Static.UploadRoot = strings.TrimSpace(cfg.Static.UploadRoot)
+	cfg.Static.PublicRoot = strings.TrimSpace(cfg.Static.PublicRoot)
 
 	return &cfg, nil
 }

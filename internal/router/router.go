@@ -24,6 +24,8 @@ type Deps struct {
 	System           *handler.System
 	FrontUser        *handler.FrontUser
 	CORSAllowOrigins []string
+	StaticUploadRoot string
+	StaticPublicRoot string
 }
 
 func NewEngine(d Deps) *gin.Engine {
@@ -57,6 +59,16 @@ func NewEngine(d Deps) *gin.Engine {
 
 	d.System.Register(api, d.JWT, d.RBACRepo, d.Log.Named("system"))
 	d.FrontUser.Register(api, d.JWT, d.RBACRepo, d.Log.Named("front_user"), d.Audit)
+
+	if d.StaticUploadRoot != "" {
+		uploads := api.Group("/uploads")
+		uploads.Use(middleware.RequireAuth(d.JWT))
+		uploads.Static("/", d.StaticUploadRoot)
+	}
+	if d.StaticPublicRoot != "" {
+		publicFiles := e.Group("/public/v1")
+		publicFiles.Static("/", d.StaticPublicRoot)
+	}
 
 	return e
 }

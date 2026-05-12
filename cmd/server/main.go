@@ -116,6 +116,8 @@ func runServer() {
 		System:           systemH,
 		FrontUser:        frontUserH,
 		CORSAllowOrigins: cfg.CORS.AllowedOrigins,
+		StaticUploadRoot: cfg.Static.UploadRoot,
+		StaticPublicRoot: cfg.Static.PublicRoot,
 	})
 
 	srv := &http.Server{
