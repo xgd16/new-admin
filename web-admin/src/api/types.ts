@@ -10,6 +10,9 @@ export const TOKEN_STORAGE_KEY = 'new_admin_access_token'
 export type LoginUser = {
   id: number
   username: string
+  /**
+   * 角色展示名（与后台 roles.name 一致，如「超级管理员」）
+   */
   roles: string[]
   permissions: string[]
 }
@@ -50,6 +53,7 @@ export type SystemUserListItem = {
   id: number
   username: string
   status: number
+  /** 角色展示名（roles.name） */
   roles: string[]
   last_login_at?: string | null
   created_at: string
@@ -65,6 +69,7 @@ export type SystemUserDetailResp = {
   username: string
   status: number
   role_ids: number[]
+  /** 角色展示名（roles.name） */
   roles: string[]
   last_login_at?: string | null
   created_at: string

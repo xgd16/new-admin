@@ -5,46 +5,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-make run          # 启动 HTTP 服务
-make build        # 编译到 bin/server
-make build-linux-amd64  # 交叉编译 linux/amd64（静态链接，CGO_ENABLED=0）
-make test         # go test ./...
-make lint         # golangci-lint run ./...
-make tidy         # go mod tidy
+make run                   # 启动 HTTP 服务
+make build                 # 编译到 bin/server
+make build-linux-amd64     # 交叉编译 linux/amd64（CGO_ENABLED=0，trimpath；默认 bin/linux-amd64/server）
+make test                  # go test ./...
+make lint                  # golangci-lint run ./...（需本机已安装）
+make tidy                  # go mod tidy
+make db-init               # scripts/init_mysql.sh 创建库（需 mysql 客户端）
 
-# 数据库迁移
-make migrate-up         # 应用全部待执行迁移
-make migrate-down       # 回滚 1 步，MIGRATE_STEPS=2 回滚多步
-make migrate-version    # 查看当前版本与 dirty 状态
-make migrate-force VER=7   # 强制设置版本（修复 dirty，慎用）
-make migrate-new NAME=xxx   # 生成新迁移骨架（需安装 migrate CLI）
+# 数据库迁移（go run ./cmd/server migrate …）
+make migrate-up            # 应用全部待执行迁移
+make migrate-down          # 回滚 1 步；MIGRATE_STEPS=2 回滚多步
+make migrate-version       # 当前版本与 dirty
+make migrate-force VER=7   # 强制版本（慎用）
+make migrate-new NAME=xxx  # 新迁移骨架（需 migrate CLI）
+
+go run ./cmd/server migrate --path migrations --help
 ```
 
 ## Architecture
 
-**Layered design with manual DI** — dependencies follow `handler → service → repository` and are wired by hand in `cmd/server/main.go:runServer()` (no wire/fx).
+**Layered design with manual DI** — `handler → service → repository`, wired in `cmd/server/main.go` → `runServer()` (no wire/fx). SIGINT/SIGTERM 触发带超时的 `Shutdown`（约 10s）。
 
 ```
-cmd/server/main.go     → 组装所有依赖，创建 Gin engine，启动 HTTP
-internal/router/       → 路由注册 + 全局中间件；Deps struct 承载所有 handler 依赖
-internal/middleware/   → RequestID, AccessLog, CORS, RequireAuth (JWT), RequirePermission
-internal/handler/      → 薄层：解析请求 → 调用 service → 用 pkg/response 写响应
-internal/service/      → 业务逻辑编排；不引用 gin.Context
-internal/repository/   → 数据访问（GORM），构造函数接收 *gorm.DB
-internal/store/        → MySQL/Redis 连接建立、migrate URL 组装
-internal/config/       → Viper 配置结构与加载
-internal/model/        → DTO、领域实体、RBAC 表结构
-pkg/errcode/           → 业务错误码常量（0=OK, 4xxxx=客户端, 5xxxx=服务端）
-pkg/response/          → 统一 JSON 响应：{code, message, data}
+cmd/server/main.go     → 配置；MySQL/Redis；日志；JWT/WebAuthn；组装 router.Deps；优雅退出
+internal/router/       → Gin：全局中间件 + /admin/v1；Deps 承载全部 handler
+internal/middleware/   → RequestID, ZapRecovery, AppLogger, ZapAccessLog, CORS,
+                         RequireAuth(JWT), RequirePermission, AuditAuthenticatedWrites
+internal/handler/      → 薄层；System/FrontUser 等路由组在 RequireAuth 后挂审计中间件
+internal/service/      → Auth（含验证码）、Passkey、System、FrontUser、Dashboard、Health、Audit 等
+internal/repository/   → GORM；*gorm.DB 注入
+internal/store/        → MySQL/Redis、migrate URL
+internal/config/       → Viper
+internal/model/        → DTO、RBAC、操作日志等
+internal/jwtissuer/    → JWT 签发与校验
+internal/logger/       → 双通道日志；debug+TTY 下 Gin 路由注册着色（NO_COLOR 关闭）
+pkg/errcode/           → 0=OK, 4xxxx 客户端, 5xxxx 服务端
+pkg/response/          → {code, message, data}
+pkg/xlsx/              → Excel 导出（如操作日志）
 ```
 
 ## Key patterns
 
-- **Config**: `configs/config.yaml` 为主配置，环境变量 `NEW_ADMIN_` 前缀可覆盖（`.` 替换为 `_`，如 `NEW_ADMIN_SERVER_ADDR`）。配置路径可通过 `NEW_ADMIN_CONFIG` 指定。
-- **JWT auth**: `internal/middleware/jwt.go` 从 `Authorization: Bearer <token>` 解析，将 `auth_uid`/`auth_username` 存入 context。Handler 通过 `middleware.AuthUserID(c)` / `middleware.AuthUsername(c)` 读取。
-- **RBAC**: `middleware.RequirePermission(perm, rbacRepo, log)` 用于需要特定权限的路由组，需在 `RequireAuth` 之后注册。
-- **API prefix**: REST 前缀 `/admin/v1`，内部按认证级别分三组：`public`（无需登录）、`authed`（需 Bearer JWT）、permission-protected（需 JWT + 权限）。
-- **Static files**: `static.upload_root` → `/admin/v1/uploads/`（需登录）；`static.public_root` → `/public/v1/`（匿名可访问）。均在 `config.yaml` 配置，空字符串则不挂载。
-- **WebAuthn/passkey**: 可选初始化 — 若 `webauthn.New()` 失败，只 warn 日志并跳过 passkey handler，不阻塞启动。
-- **Database**: 表结构以 `migrations/` 中的 SQL 为准，禁止用 GORM `AutoMigrate` 管理线上结构。迁移 URL 含 `multiStatements=true`，单文件可写多条 SQL。
-- **Logging**: zap 双通道 — 业务日志（`zapLog`）+ HTTP 访问日志（`accessLog`）。生产模式输出 JSON，可配置按级别拆分文件（error 单独落盘）、大小轮转与压缩。
+- **Go version**: Follow `go.mod` `go` directive (keep README tech table aligned).
+- **Config**: `configs/config.yaml`；`NEW_ADMIN_` 覆盖（`.` → `_`）；`NEW_ADMIN_CONFIG` 指定路径。
+- **Gin**: `gin.SetMode(cfg.Server.Mode)`；debug + TTY 下 `logger.InstallGinPrettyConsole` 着色路由输出。
+- **JWT**: `Authorization: Bearer <token>`；`internal/middleware/jwt.go` → context `auth_uid` / `auth_username`；`middleware.AuthUserID` / `AuthUsername`。
+- **RBAC**: `RequirePermission(perm, rbacRepo, log)` 在 `RequireAuth` 之后；perms 与 DB 一致（如 `dashboard:view`、`system:user:write`、`front:user:read`）。
+- **Audit**: `AuditAuthenticatedWrites(audit)` 记录鉴权后的非 GET/HEAD/OPTIONS 写操作。
+- **API**: 前缀 `/admin/v1`；`GET /robots.txt`；public → authed → per-route permission。
+- **Static files**: `static.upload_root` → `/admin/v1/uploads/`（登录）；`static.public_root` → `/public/v1/`；空则不挂载。
+- **WebAuthn**: 可选；`webauthn.New()` 失败则 warn 并跳过 passkey，不阻塞启动。
+- **Database**: `migrations/*.sql` 为准；不用 `AutoMigrate` 管线上；DSN `multiStatements=true`。
+- **Logging**: zap 业务 + access；生产 JSON；敏感信息勿记录。
+- **Frontend**: `web-admin` — `npm run dev`；CORS `cors.allowed_origins` 需含前端 Origin。
+
+## Domain wiring (quick ref)
+
+`runServer()`：user/rbac/front_user/admin_op_log repos → `Audit` → `Auth`（JWT + captcha）→ System / FrontUser / Dashboard / Health / Passkey（可选）。
+
+---
+
+See [AGENTS.md](./AGENTS.md) for Chinese-first conventions; update both files when layering or router rules change.

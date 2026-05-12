@@ -27,6 +27,17 @@ ORDER BY r.code`, userID).Scan(&codes).Error
 	return codes, err
 }
 
+// RoleNamesByUserID 返回用户所属角色在 roles.name 中的展示名（如中文名），按 code 排序。
+func (r *RBAC) RoleNamesByUserID(ctx context.Context, userID uint64) ([]string, error) {
+	var names []string
+	err := r.db.WithContext(ctx).Raw(`
+SELECT r.name FROM roles r
+INNER JOIN user_roles ur ON ur.role_id = r.id
+WHERE ur.user_id = ?
+ORDER BY r.code`, userID).Scan(&names).Error
+	return names, err
+}
+
 func (r *RBAC) PermissionCodesByUserID(ctx context.Context, userID uint64) ([]string, error) {
 	var codes []string
 	err := r.db.WithContext(ctx).Raw(`

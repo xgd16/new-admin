@@ -91,6 +91,7 @@ func (h *FrontUser) list(c *gin.Context) {
 		params,
 	)
 	if err != nil {
+		logHandlerErr(c, "front_user_list", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -110,6 +111,7 @@ func (h *FrontUser) get(c *gin.Context) {
 	case errors.Is(err, service.ErrFrontUserNotFound):
 		response.Fail(c, http.StatusNotFound, errcode.NotFound, "前台用户不存在")
 	default:
+		logHandlerErr(c, "front_user_get", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -117,6 +119,7 @@ func (h *FrontUser) get(c *gin.Context) {
 func (h *FrontUser) create(c *gin.Context) {
 	var req model.FrontUserCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -132,6 +135,7 @@ func (h *FrontUser) update(c *gin.Context) {
 	}
 	var req model.FrontUserUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -154,6 +158,7 @@ func (h *FrontUser) writeMutationResult(c *gin.Context, out *model.FrontUserDeta
 	case errors.Is(err, service.ErrFrontUserBadRequest):
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数无效")
 	default:
+		logHandlerErr(c, "front_user_mutation", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }

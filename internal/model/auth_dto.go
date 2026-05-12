@@ -22,13 +22,13 @@ type LoginResp struct {
 type LoginUserDTO struct {
 	ID          uint64   `json:"id"`
 	Username    string   `json:"username"`
-	Roles       []string `json:"roles"`
+	Roles       []string `json:"roles"` // 展示名，与 roles.name 一致（非 code）
 	Permissions []string `json:"permissions"`
 }
 
 type MeResp struct {
 	ID          uint64   `json:"id"`
 	Username    string   `json:"username"`
-	Roles       []string `json:"roles"`
+	Roles       []string `json:"roles"` // 展示名，与 roles.name 一致（非 code）
 	Permissions []string `json:"permissions"`
 }

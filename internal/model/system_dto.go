@@ -6,7 +6,7 @@ type SystemUserListItem struct {
 	ID          uint64     `json:"id"`
 	Username    string     `json:"username"`
 	Status      int8       `json:"status"`
-	Roles       []string   `json:"roles"`
+	Roles       []string   `json:"roles"` // 展示名，与 roles.name 一致
 	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 }
@@ -30,7 +30,7 @@ type SystemUserDetailResp struct {
 	Username    string     `json:"username"`
 	Status      int8       `json:"status"`
 	RoleIDs     []uint64   `json:"role_ids"`
-	Roles       []string   `json:"roles"`
+	Roles       []string   `json:"roles"` // 展示名，与 roles.name 一致
 	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`

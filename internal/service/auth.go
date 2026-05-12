@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	ErrAuthInvalidCred   = errors.New("invalid credential")
-	ErrAuthUserDisabled  = errors.New("user disabled")
-	ErrAuthUserNotFound  = errors.New("user not found")
+	ErrAuthInvalidCred  = errors.New("invalid credential")
+	ErrAuthUserDisabled = errors.New("user disabled")
+	ErrAuthUserNotFound = errors.New("user not found")
 )
 
 type Auth struct {
@@ -56,7 +56,7 @@ func (s *Auth) Login(ctx context.Context, username, password string, meta Client
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		return nil, ErrAuthInvalidCred
 	}
-	roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+	roles, err := s.rbac.RoleNamesByUserID(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (s *Auth) LoginWithVerifiedUser(ctx context.Context, userID uint64, meta Cl
 	if u.Status != 1 {
 		return nil, ErrAuthUserDisabled
 	}
-	roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+	roles, err := s.rbac.RoleNamesByUserID(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (s *Auth) Profile(ctx context.Context, userID uint64) (*model.MeResp, error
 	if u.Status != 1 {
 		return nil, ErrAuthUserDisabled
 	}
-	roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+	roles, err := s.rbac.RoleNamesByUserID(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}

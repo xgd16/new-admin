@@ -86,6 +86,7 @@ func (h *System) listOperationLogs(c *gin.Context) {
 	operation := strings.TrimSpace(c.Query("operation"))
 	out, err := h.audit.ListLogs(c.Request.Context(), page, pageSize, q, field, operation)
 	if err != nil {
+		logHandlerErr(c, "audit_list_logs", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -96,6 +97,7 @@ func (h *System) operationLogStats(c *gin.Context) {
 	days := parseQueryInt(c, "days", 14)
 	out, err := h.audit.OperationLogStats(c.Request.Context(), days)
 	if err != nil {
+		logHandlerErr(c, "audit_operation_log_stats", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -115,6 +117,7 @@ func (h *System) exportOperationLogs(c *gin.Context) {
 	operation := strings.TrimSpace(c.Query("operation"))
 	data, filename, err := h.audit.ExportOperationLogsXLSX(c.Request.Context(), limit, q, field, operation)
 	if err != nil {
+		logHandlerErr(c, "audit_export_operation_logs", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "导出失败")
 		return
 	}
@@ -153,6 +156,7 @@ func (h *System) listUsers(c *gin.Context) {
 	}
 	out, err := h.svc.ListUsers(c.Request.Context(), parseQueryInt(c, "page", 1), parseQueryInt(c, "page_size", 20), params)
 	if err != nil {
+		logHandlerErr(c, "system_list_users", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -172,6 +176,7 @@ func (h *System) getUser(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemUserNotFound):
 		response.Fail(c, http.StatusNotFound, errcode.NotFound, "用户不存在")
 	default:
+		logHandlerErr(c, "system_get_user", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -179,6 +184,7 @@ func (h *System) getUser(c *gin.Context) {
 func (h *System) createUser(c *gin.Context) {
 	var req model.SystemUserCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -191,6 +197,7 @@ func (h *System) createUser(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemInvalidRole):
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "角色无效")
 	default:
+		logHandlerErr(c, "system_create_user", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -208,6 +215,7 @@ func (h *System) updateUser(c *gin.Context) {
 	}
 	var req model.SystemUserUpdateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -228,6 +236,7 @@ func (h *System) updateUser(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemBadRequest):
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数无效")
 	default:
+		logHandlerErr(c, "system_update_user", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -235,6 +244,7 @@ func (h *System) updateUser(c *gin.Context) {
 func (h *System) listRoles(c *gin.Context) {
 	out, err := h.svc.ListRoles(c.Request.Context())
 	if err != nil {
+		logHandlerErr(c, "system_list_roles", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -254,6 +264,7 @@ func (h *System) getRole(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemRoleNotFound):
 		response.Fail(c, http.StatusNotFound, errcode.NotFound, "角色不存在")
 	default:
+		logHandlerErr(c, "system_get_role", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -261,6 +272,7 @@ func (h *System) getRole(c *gin.Context) {
 func (h *System) createRole(c *gin.Context) {
 	var req model.SystemRoleCreateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -275,6 +287,7 @@ func (h *System) createRole(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemBadRequest):
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数无效")
 	default:
+		logHandlerErr(c, "system_create_role", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -282,6 +295,7 @@ func (h *System) createRole(c *gin.Context) {
 func (h *System) listPermissions(c *gin.Context) {
 	out, err := h.svc.ListPermissions(c.Request.Context())
 	if err != nil {
+		logHandlerErr(c, "system_list_permissions", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -296,6 +310,7 @@ func (h *System) updateRolePermissions(c *gin.Context) {
 	}
 	var req model.SystemUpdateRolePermissionsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -308,6 +323,7 @@ func (h *System) updateRolePermissions(c *gin.Context) {
 	case errors.Is(err, service.ErrSystemInvalidPermission):
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "含不存在的权限码")
 	default:
+		logHandlerErr(c, "system_update_role_permissions", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }

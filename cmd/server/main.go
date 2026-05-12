@@ -80,6 +80,7 @@ func runServer() {
 	}()
 
 	gin.SetMode(cfg.Server.Mode)
+	logger.InstallGinPrettyConsole(cfg.Server.Mode)
 
 	// 以下为 HTTP 层依赖装配：repository → service → handler → router
 	jwtTTL := time.Duration(cfg.JWT.AccessTTLMin) * time.Minute

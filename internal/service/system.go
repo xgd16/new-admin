@@ -86,7 +86,7 @@ func (s *System) ListUsers(ctx context.Context, page, pageSize int, params *mode
 	}
 	list := make([]model.SystemUserListItem, 0, len(users))
 	for _, u := range users {
-		roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+		roles, err := s.rbac.RoleNamesByUserID(ctx, u.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +110,7 @@ func (s *System) GetUser(ctx context.Context, id uint64) (*model.SystemUserDetai
 	if u == nil {
 		return nil, ErrSystemUserNotFound
 	}
-	roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+	roles, err := s.rbac.RoleNamesByUserID(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}

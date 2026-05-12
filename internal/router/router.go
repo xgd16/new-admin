@@ -36,8 +36,9 @@ type Deps struct {
 
 func NewEngine(d Deps) *gin.Engine {
 	e := gin.New()
-	e.Use(gin.Recovery())
+	e.Use(middleware.ZapRecovery(d.Log))
 	e.Use(middleware.RequestID())
+	e.Use(middleware.WithAppLogger(d.Log))
 
 	access := d.AccessLog
 	if access == nil {

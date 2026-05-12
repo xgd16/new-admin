@@ -47,6 +47,7 @@ func (h *Passkey) ListCredentials(c *gin.Context) {
 	}
 	list, err := h.svc.ListCredentialItems(c.Request.Context(), uid)
 	if err != nil {
+		logHandlerErr(c, "passkey_list_credentials", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "无法加载通行密钥列表")
 		return
 	}
@@ -75,6 +76,7 @@ func (h *Passkey) DeleteCredential(c *gin.Context) {
 	case errors.Is(err, service.ErrPasskeyCredentialNotFound):
 		response.Fail(c, http.StatusNotFound, errcode.NotFound, "操作未能完成，请刷新后重试")
 	default:
+		logHandlerErr(c, "passkey_delete_credential", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "解绑失败")
 	}
 }
@@ -86,6 +88,7 @@ func (h *Passkey) LoginBegin(c *gin.Context) {
 	}
 	var req model.PasskeyLoginBeginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -95,6 +98,7 @@ func (h *Passkey) LoginBegin(c *gin.Context) {
 	case err == nil:
 		raw, err := json.Marshal(assert)
 		if err != nil {
+			logHandlerErr(c, "passkey_login_begin_marshal", err)
 			response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 			return
 		}
@@ -105,6 +109,7 @@ func (h *Passkey) LoginBegin(c *gin.Context) {
 		// 与「账号是否存在 / 是否绑定 Passkey / 是否禁用」相关的提示统一模糊，降低枚举与推断风险
 		response.Fail(c, http.StatusUnauthorized, errcode.Unauthorized, passkeyBeginVague)
 	default:
+		logHandlerErr(c, "passkey_login_begin", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -116,6 +121,7 @@ func (h *Passkey) LoginFinish(c *gin.Context) {
 	}
 	var req model.PasskeyLoginFinishReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -126,6 +132,7 @@ func (h *Passkey) LoginFinish(c *gin.Context) {
 	out, err := h.svc.FinishLogin(c.Request.Context(), req.SessionKey, []byte(req.Credential), meta)
 	if err != nil {
 		// 不区分会话失效、用户状态、断言校验失败等，避免推断账号或绑定情况
+		logHandlerErr(c, "passkey_login_finish", err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "通行密钥验证未通过，请重试或使用密码登录")
 		return
 	}
@@ -144,11 +151,13 @@ func (h *Passkey) RegisterBegin(c *gin.Context) {
 	}
 	key, creation, err := h.svc.BeginRegistration(c.Request.Context(), uid)
 	if err != nil {
+		logHandlerErr(c, "passkey_register_begin", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "无法开始注册")
 		return
 	}
 	raw, err := json.Marshal(creation)
 	if err != nil {
+		logHandlerErr(c, "passkey_register_begin_marshal", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
 	}
@@ -167,10 +176,12 @@ func (h *Passkey) RegisterFinish(c *gin.Context) {
 	}
 	var req model.PasskeyRegisterFinishReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
 	if err := h.svc.FinishRegistration(c.Request.Context(), uid, req.SessionKey, []byte(req.Credential)); err != nil {
+		logHandlerErr(c, "passkey_register_finish", err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "操作未能完成，请重试")
 		return
 	}

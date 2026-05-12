@@ -31,6 +31,7 @@ func (h *Auth) RegisterPublic(rg *gin.RouterGroup) {
 func (h *Auth) Captcha(c *gin.Context) {
 	id, img, err := h.captcha.Generate()
 	if err != nil {
+		logHandlerErr(c, "captcha_generate", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "验证码生成失败")
 		return
 	}
@@ -44,6 +45,7 @@ func (h *Auth) RegisterAuthed(auth *gin.RouterGroup) {
 func (h *Auth) Login(c *gin.Context) {
 	var req model.LoginReq
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logBindJSON(c, err)
 		response.Fail(c, http.StatusBadRequest, errcode.BadRequest, "参数错误")
 		return
 	}
@@ -64,6 +66,7 @@ func (h *Auth) Login(c *gin.Context) {
 	case errors.Is(err, service.ErrAuthUserDisabled):
 		response.Fail(c, http.StatusForbidden, errcode.Forbidden, "账号已禁用")
 	default:
+		logHandlerErr(c, "auth_login", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
@@ -83,6 +86,7 @@ func (h *Auth) Me(c *gin.Context) {
 	case errors.Is(err, service.ErrAuthUserDisabled):
 		response.Fail(c, http.StatusForbidden, errcode.Forbidden, "账号已禁用")
 	default:
+		logHandlerErr(c, "auth_profile", err)
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 	}
 }
