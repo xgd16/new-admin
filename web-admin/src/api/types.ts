@@ -49,6 +49,35 @@ export type PasskeyCredentialListData = {
 /** 与 pkg/errcode.Forbidden 一致 */
 export const ERR_FORBIDDEN = 40301
 
+/** GET /admin/v1/dashboard/overview — 与 internal/model/dashboard 对齐 */
+export type DashboardMetricItem = {
+  label: string
+  value: string
+  hint: string
+  icon: string
+  tone: string
+}
+
+export type DashboardStatDay = {
+  date: string
+  count: number
+}
+
+export type DashboardUserStats = {
+  days: number
+  front_new_in_range: number
+  admin_new_in_range: number
+  front_new_by_day: DashboardStatDay[]
+  admin_new_by_day: DashboardStatDay[]
+}
+
+export type DashboardOverviewData = {
+  title: string
+  message: string
+  metrics?: DashboardMetricItem[]
+  user_stats?: DashboardUserStats | null
+}
+
 export type SystemUserListItem = {
   id: number
   username: string

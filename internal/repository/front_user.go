@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -28,6 +29,38 @@ func (r *FrontUser) CountByStatus(ctx context.Context, status int8) (int64, erro
 	var n int64
 	err := r.db.WithContext(ctx).Model(&model.FrontUser{}).Where("status = ?", status).Count(&n).Error
 	return n, err
+}
+
+// CountCreatedSince 统计 created_at >= since 的前台用户数。
+func (r *FrontUser) CountCreatedSince(ctx context.Context, since time.Time) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.FrontUser{}).
+		Where("created_at >= ?", since).Count(&n).Error
+	return n, err
+}
+
+// StatsCreatedByDaySince 按本地日聚合新建前台用户数。
+func (r *FrontUser) StatsCreatedByDaySince(ctx context.Context, since time.Time) ([]model.DashboardStatDay, error) {
+	type row struct {
+		Day string
+		Cnt int64
+	}
+	var rows []row
+	err := r.db.WithContext(ctx).Raw(`
+SELECT DATE(created_at) AS day, COUNT(*) AS cnt
+FROM front_users
+WHERE created_at >= ?
+GROUP BY DATE(created_at)
+ORDER BY day ASC
+`, since).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make([]model.DashboardStatDay, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, model.DashboardStatDay{Date: x.Day, Count: x.Cnt})
+	}
+	return out, nil
 }
 
 func (r *FrontUser) List(ctx context.Context, offset, limit int) ([]model.FrontUser, error) {

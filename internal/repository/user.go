@@ -55,6 +55,38 @@ func (r *User) CountByStatus(ctx context.Context, status int8) (int64, error) {
 	return n, err
 }
 
+// CountCreatedSince 统计 created_at >= since 的后台用户数。
+func (r *User) CountCreatedSince(ctx context.Context, since time.Time) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).
+		Where("created_at >= ?", since).Count(&n).Error
+	return n, err
+}
+
+// StatsCreatedByDaySince 按本地日聚合新建后台用户数。
+func (r *User) StatsCreatedByDaySince(ctx context.Context, since time.Time) ([]model.DashboardStatDay, error) {
+	type row struct {
+		Day string
+		Cnt int64
+	}
+	var rows []row
+	err := r.db.WithContext(ctx).Raw(`
+SELECT DATE(created_at) AS day, COUNT(*) AS cnt
+FROM users
+WHERE created_at >= ?
+GROUP BY DATE(created_at)
+ORDER BY day ASC
+`, since).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	out := make([]model.DashboardStatDay, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, model.DashboardStatDay{Date: x.Day, Count: x.Cnt})
+	}
+	return out, nil
+}
+
 func (r *User) List(ctx context.Context, offset, limit int) ([]model.User, error) {
 	var list []model.User
 	err := r.db.WithContext(ctx).Order("id ASC").Offset(offset).Limit(limit).Find(&list).Error

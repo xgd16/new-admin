@@ -4,7 +4,9 @@ import { useOutletContext } from 'react-router-dom'
 import { Alert, Chip, Separator, Text } from '@heroui/react'
 
 import { ADMIN_API_PREFIX, apiRequest } from '../api/client'
+import type { DashboardOverviewData } from '../api/types'
 import { useAuth } from '../auth/authContext'
+import { DashboardUserTrendChart } from '../components/DashboardUserTrendChart'
 import { AnimatePresence, motion, motionTokens } from '../components/motionConfig'
 import type { AdminLayoutOutletContext } from '../layouts/AdminLayout'
 
@@ -16,13 +18,11 @@ type OverviewMetric = {
   tone: string
 }
 
-type OverviewPayload = {
-  title: string
-  message: string
-  metrics?: OverviewMetric[]
-}
+type OverviewPayload = DashboardOverviewData
 
 const loadingPlaceholders: OverviewMetric[] = [
+  { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
+  { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
@@ -77,7 +77,7 @@ export function OverviewPage() {
   return (
     <>
       <motion.div
-        className="grid gap-3 sm:grid-cols-2 sm:gap-4 2xl:grid-cols-4"
+        className="grid gap-3 sm:grid-cols-2 sm:gap-4 2xl:grid-cols-3"
         {...motionTokens.list}
       >
         {displayMetrics.map((metric, idx) => (
@@ -98,7 +98,7 @@ export function OverviewPage() {
               </span>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[color:var(--accent-3)]/15 px-2.5 py-1 text-xs font-semibold text-[color:var(--accent-3)]">
+              <span className="rounded-full bg-(--accent-3)/15 px-2.5 py-1 text-xs font-semibold text-(--accent-3)">
                 {metric.hint}
               </span>
             </div>
@@ -107,13 +107,26 @@ export function OverviewPage() {
       </motion.div>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:gap-5">
+        {overview?.user_stats && !loading ? (
+          <motion.article
+            className="glass-card rounded-xl p-4 sm:p-5 sm:col-span-2"
+            {...motionTokens.item}
+          >
+            <DashboardUserTrendChart
+              front={overview.user_stats.front_new_by_day}
+              admin={overview.user_stats.admin_new_by_day}
+              daysHint={`统计窗口 ${overview.user_stats.days} 天 · 前台累计新增 ${overview.user_stats.front_new_in_range} · 后台累计新增 ${overview.user_stats.admin_new_in_range}`}
+            />
+          </motion.article>
+        ) : null}
+
         <motion.article className="glass-card rounded-xl p-4 sm:p-5" {...motionTokens.item}>
             <div className="mb-4 flex items-center justify-between">
               <Text className="text-lg font-bold">当前身份</Text>
-              <i className="ri-user-star-line text-xl text-[color:var(--accent)]" />
+              <i className="ri-user-star-line text-xl text-(--accent)" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="grid size-14 place-items-center rounded-xl bg-gradient-to-br from-[color:var(--accent)] to-[color:var(--accent-2)] text-xl font-black text-white">
+              <div className="grid size-14 place-items-center rounded-xl bg-linear-to-br from-(--accent) to-(--accent-2) text-xl font-black text-white">
                 {(user?.username || 'A').slice(0, 1).toUpperCase()}
               </div>
               <div className="flex min-w-0 flex-col gap-1">
@@ -132,7 +145,7 @@ export function OverviewPage() {
           <motion.article className="glass-card rounded-xl p-4 sm:p-5" {...motionTokens.item}>
             <div className="mb-4 flex items-center justify-between">
               <Text className="text-lg font-bold">权限清单</Text>
-              <span className="rounded-full bg-[color:var(--accent)]/15 px-2.5 py-1 text-xs font-semibold text-[color:var(--accent)]">
+              <span className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-(--accent)">
                 {user?.permissions?.length || 0} 项
               </span>
             </div>
