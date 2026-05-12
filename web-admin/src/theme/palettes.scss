@@ -1,5 +1,5 @@
 /**
- * 配色预设：覆盖 index.css 中的 --accent / --accent-2 / --accent-3 / --glow。
+ * 配色预设：覆盖 index.scss 中的 --accent / --accent-2 / --accent-3 / --glow。
  * --indigo 使用默认变量，不设此处规则。
  * 选择器需包含 [data-theme] 与 [data-palette]， specificity 高于单层 :root。
  */

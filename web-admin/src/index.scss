@@ -1,0 +1,482 @@
+@use './theme/palettes';
+@import 'remixicon/fonts/remixicon.css';
+
+:root {
+  font-family:
+    "SF Pro Display", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+  color: var(--text);
+  background: var(--page);
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  --page: #e8ecf4;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: #ffffff;
+  --surface-soft: rgba(255, 255, 255, 0.72);
+  --text: #111827;
+  --muted: #667085;
+  --faint: #98a2b3;
+  --border: rgba(15, 23, 42, 0.14);
+  --accent: #4f46e5;
+  --accent-2: #06b6d4;
+  --accent-3: #22c55e;
+  --warning: #f97316;
+  --danger: #ef4444;
+  --glow: rgba(79, 70, 229, 0.24);
+  --shadow: 0 24px 80px rgba(15, 23, 42, 0.16);
+  --shadow-soft: 0 10px 32px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme='dark'] {
+  --page: #030712;
+  --surface: rgba(13, 20, 35, 0.76);
+  --surface-strong: rgba(16, 24, 40, 0.92);
+  --surface-soft: rgba(15, 23, 42, 0.56);
+  --text: #f8fafc;
+  --muted: #a6b0c3;
+  --faint: #667085;
+  --border: rgba(148, 163, 184, 0.16);
+  --accent: #7868ff;
+  --accent-2: #22d3ee;
+  --accent-3: #76e4a4;
+  --warning: #fb923c;
+  --danger: #f87171;
+  --glow: rgba(124, 92, 255, 0.34);
+  --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.28);
+
+  /*
+   * HeroUI 默认深色下 --field-background 与 --surface 相同且 field 无边框，
+   * 在玻璃弹层内几乎不可辨；略微抬高底色并显示 1px 边界。
+   */
+  --field-background: oklch(27.5% 0.014 285.5);
+  --field-border: oklch(48% 0.02 286 / 0.42);
+  --field-border-width: 1px;
+  --field-placeholder: oklch(58% 0.018 286);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 34rem),
+    radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 30rem),
+    radial-gradient(circle at 80% 90%, color-mix(in srgb, var(--accent-3) 14%, transparent), transparent 34rem),
+    var(--page);
+}
+
+#root {
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  position: relative;
+  overflow-x: clip;
+  overflow-y: auto;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-soft) 80%, transparent), transparent),
+    var(--page);
+}
+
+/* 管理端：固定顶栏 + 侧栏，仅主内容区滚动（由 AdminLayout 根节点挂此类） */
+.app-shell.admin-fixed-layout {
+  overflow: hidden;
+}
+
+/* 主内容滚动区：四边 alpha 渐隐，底下透出布局背景（光晕/底色） */
+.admin-layout-outlet {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  --outlet-fade-y: min(2.25rem, 9vh);
+  --outlet-fade-x: min(1.75rem, 6vw);
+  padding-block: calc(var(--outlet-fade-y) * 0.5);
+  padding-inline: calc(var(--outlet-fade-x) * 0.5);
+  mask-image:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 calc(var(--outlet-fade-y) * 0.4),
+      #000 calc(100% - var(--outlet-fade-y) * 0.4),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      #000 calc(var(--outlet-fade-x) * 0.4),
+      #000 calc(100% - var(--outlet-fade-x) * 0.4),
+      transparent 100%
+    );
+  mask-size: 100% 100%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 calc(var(--outlet-fade-y) * 0.4),
+      #000 calc(100% - var(--outlet-fade-y) * 0.4),
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      #000 calc(var(--outlet-fade-x) * 0.4),
+      #000 calc(100% - var(--outlet-fade-x) * 0.4),
+      transparent 100%
+    );
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+}
+
+.orb {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(4px);
+  opacity: 0.72;
+}
+
+.orb-primary {
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 46%, transparent), transparent 68%);
+}
+
+.orb-cyan {
+  width: 19rem;
+  height: 19rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 42%, transparent), transparent 70%);
+}
+
+.glass-panel {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 90%, transparent), var(--surface)),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+
+/* 浅色：面板接近实色白 + 略强描边/阴影，避免与 --page 融在一块 */
+html:not(.dark) .glass-panel {
+  background: linear-gradient(
+    168deg,
+    #ffffff 0%,
+    #fafbfd 45%,
+    #f4f6fb 100%
+  );
+  border-color: rgba(15, 23, 42, 0.15);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 12px 36px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(20px) saturate(125%);
+}
+
+.glass-card {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface-strong) 86%, transparent), var(--surface-soft)),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(20px) saturate(135%);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    background 220ms ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  box-shadow: var(--shadow);
+}
+
+html:not(.dark) .glass-card {
+  background: linear-gradient(
+    152deg,
+    rgba(255, 255, 255, 0.99) 0%,
+    #f7f9fc 52%,
+    #f0f3f9 100%
+  );
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.045),
+    0 10px 28px rgba(15, 23, 42, 0.09);
+}
+
+/* 浅色：表单/设置页内嵌操作块与白色主卡片分层 */
+html:not(.dark) .settings-option-slab {
+  background: color-mix(in srgb, var(--page) 32%, #ffffff);
+  border-color: rgba(15, 23, 42, 0.13);
+}
+
+.nav-item {
+  color: var(--muted);
+  transition:
+    color 240ms cubic-bezier(0.22, 1, 0.32, 1),
+    background-size 340ms cubic-bezier(0.22, 1, 0.32, 1),
+    background-color 340ms cubic-bezier(0.22, 1, 0.32, 1),
+    box-shadow 340ms cubic-bezier(0.22, 1, 0.32, 1);
+}
+
+.nav-item:hover:not(.nav-item-active) {
+  color: var(--text);
+}
+
+/* Style 1: 下划线 (Line) - 默认 */
+.nav-style-line .nav-item {
+  background:
+    linear-gradient(var(--accent), var(--accent)) 0 100% / 0% 2px no-repeat,
+    transparent;
+}
+.nav-style-line .nav-item:hover:not(.nav-item-active) {
+  background-size: 52% 2px, auto;
+}
+.nav-style-line .nav-item-active {
+  color: var(--text);
+  background-size: 100% 2px, auto;
+}
+
+/* Style 2: 面性胶囊 (Pill) */
+.nav-style-pill .nav-item {
+  background-color: transparent;
+}
+.nav-style-pill .nav-item:hover:not(.nav-item-active) {
+  background-color: color-mix(in srgb, var(--surface-strong) 40%, transparent);
+}
+.nav-style-pill .nav-item-active {
+  color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Style 3: 左侧光柱 (Glow) */
+.nav-style-glow .nav-item {
+  background-color: transparent;
+}
+.nav-style-glow .nav-item:hover:not(.nav-item-active) {
+  background-color: color-mix(in srgb, var(--surface-strong) 30%, transparent);
+}
+.nav-style-glow .nav-item-active {
+  color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+.metric-line {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+}
+
+.soft-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.theme-toggle-knob {
+  transform: translateX(var(--toggle-x, 0));
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme='dark'] .theme-toggle {
+  --toggle-x: 1.5rem;
+}
+
+.icon-badge {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.mini-chart {
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--accent) 12%, transparent), transparent),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 18px,
+      color-mix(in srgb, var(--border) 72%, transparent) 19px
+    );
+}
+
+.status-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-3);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-3) 16%, transparent);
+  animation: status-pulse 1.8s ease-in-out infinite;
+}
+
+button,
+a,
+label,
+input,
+select,
+textarea {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+button:active,
+a:active,
+label:active {
+  transform: scale(0.98);
+}
+
+/* HeroUI InputGroup 等由组件在外层处理焦点环（ring），此处再套一层会与组边框叠出浅色方框 */
+input:focus:not([data-slot='input-group-input']),
+select:focus,
+textarea:focus:not([data-slot='input-group-textarea']) {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+tbody tr {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease;
+}
+
+tbody tr:hover {
+  transform: translateX(2px);
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-3) 16%, transparent);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent-3) 8%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 设置页「减少界面动效」：与 prefers-reduced-motion 同等收敛过渡 */
+html[data-reduce-motion='true'] *,
+html[data-reduce-motion='true'] *::before,
+html[data-reduce-motion='true'] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/*
+ * 滚动条样式（系统设置项）：html[data-scrollbar] 由 prefs/workspace + index.html 首屏脚本写入。
+ * overlay — 不绘制滚动条，仍可滚轮/触控滑动；visible — 常规滚动条与轨道。
+ */
+html[data-scrollbar='overlay'] *,
+html[data-scrollbar='overlay'] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html[data-scrollbar='overlay'] ::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html[data-scrollbar='visible'] *,
+html[data-scrollbar='visible'] {
+  scrollbar-width: auto;
+  scrollbar-color: color-mix(in srgb, var(--muted) 85%, var(--border))
+    color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+html[data-scrollbar='visible'] ::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+html[data-scrollbar='visible'] ::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 6px;
+}
+
+html[data-scrollbar='visible'] ::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 68%, var(--border));
+  border-radius: 6px;
+  border: 2px solid color-mix(in srgb, var(--page) 55%, transparent);
+}
+
+html[data-scrollbar='visible'] ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted) 82%, var(--accent));
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .orb-primary {
+    width: 16rem;
+    height: 16rem;
+  }
+
+  .orb-cyan {
+    width: 14rem;
+    height: 14rem;
+  }
+
+  .glass-panel,
+  .glass-card {
+    backdrop-filter: blur(18px) saturate(125%);
+  }
+}
