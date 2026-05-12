@@ -1,11 +1,19 @@
 import {
+  Button,
   Checkbox,
   ListBox,
   Select,
   Separator,
   Text,
+  toast,
 } from '@heroui/react'
 
+import { useState } from 'react'
+
+import useSWR from 'swr'
+
+import { useAuth } from '../auth/authContext'
+import { webAuthnSupported } from '../auth/webauthnClient'
 import { motion, motionTokens } from '../components/motionConfig'
 import {
   ALLOWED_PAGE_SIZES,
@@ -24,6 +32,30 @@ import {
 import { PALETTE_OPTIONS, PALETTE_LIGHT_SWATCHES, type PaletteId } from '../theme/palette'
 import { useTheme } from '../theme/themeContext'
 import type { ThemePreference } from '../theme/themeContext'
+import type { PasskeyCredentialItem } from '../api/types'
+import { deletePasskeyCredential, fetchPasskeyCredentials } from '../api/passkeys'
+
+function passkeyAttachmentLabel(a: string): string {
+  if (a === 'platform') return '本机 / 平台认证器'
+  if (a === 'cross-platform') return '外置 / 安全密钥等'
+  return a ? a : '未知'
+}
+
+function passkeyTransportLabel(t: string): string {
+  const m: Record<string, string> = {
+    internal: '内置',
+    usb: 'USB',
+    ble: '蓝牙',
+    nfc: 'NFC',
+    hybrid: '混合',
+  }
+  return m[t] ?? t
+}
+
+function passkeyBackupNote(p: PasskeyCredentialItem): string | null {
+  if (!p.backup_eligible) return null
+  return p.backup_state ? '支持同步（已标记为可备份/同步状态）' : '支持同步（当前未标记已备份）'
+}
 
 function PalettePreviewStrip({ id, className = '' }: { id: PaletteId; className?: string }) {
   const [a, b, c] = PALETTE_LIGHT_SWATCHES[id]
@@ -43,10 +75,13 @@ function SettingRow({
   title,
   description,
   children,
+  wide,
 }: {
   title: string
   description: string
   children: React.ReactNode
+  /** 为 true 时右侧内容区在大屏下放宽（如通行密钥多行列表） */
+  wide?: boolean
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
@@ -56,7 +91,11 @@ function SettingRow({
           {description}
         </Text>
       </div>
-      <div className="w-full min-w-0 sm:max-w-xs sm:w-auto sm:flex-1">{children}</div>
+      <div
+        className={`w-full min-w-0 sm:w-auto sm:flex-1 ${wide ? 'sm:max-w-2xl' : 'sm:max-w-xs'}`}
+      >
+        {children}
+      </div>
     </div>
   )
 }
@@ -92,6 +131,17 @@ const SIDEBAR_NAV_STYLE_OPTIONS: { id: SidebarNavStyle; label: string; hint: str
 ]
 
 export function SettingsPage() {
+  const { registerPasskey, token } = useAuth()
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
+  const [passkeyDeletingId, setPasskeyDeletingId] = useState<number | null>(null)
+  const {
+    data: passkeyList,
+    error: passkeyListError,
+    isLoading: passkeyListLoading,
+    mutate: mutatePasskeyList,
+  } = useSWR(token ? 'settings-passkeys' : null, fetchPasskeyCredentials, {
+    revalidateOnFocus: true,
+  })
   const { themePreference, setThemePreference, paletteId, setPaletteId } = useTheme()
   const [reduceMotion, setReduceMotion] = useReduceMotionPref()
   const [sidebarCompact, setSidebarCompact] = useSidebarCompact()
@@ -360,6 +410,152 @@ export function SettingsPage() {
                 </span>
               </Checkbox.Content>
             </Checkbox>
+          </div>
+        </SettingRow>
+
+        <SettingRow
+          wide
+          title="通行密钥（Passkey）"
+          description="同一账号可绑定多台设备或浏览器。使用通行密钥免密登录前须已用密码登录。访问站点主机名须与后台 rp_id 一致（勿混用 localhost 与 127.0.0.1）。"
+        >
+          <div className="flex w-full flex-col gap-4">
+            {passkeyListLoading ? (
+              <Text size="sm" variant="muted">
+                正在加载已绑定设备…
+              </Text>
+            ) : null}
+            {passkeyListError ? (
+              <Text size="sm" className="text-red-600 dark:text-red-400">
+                {passkeyListError instanceof Error ? passkeyListError.message : '加载失败'}
+              </Text>
+            ) : null}
+            {!passkeyListLoading && passkeyList && passkeyList.length === 0 ? (
+              <Text size="sm" variant="muted">
+                尚未绑定任何通行密钥。
+              </Text>
+            ) : null}
+            {passkeyList && passkeyList.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {passkeyList.map((p) => {
+                  const backup = passkeyBackupNote(p)
+                  const transports =
+                    p.transports.length > 0
+                      ? p.transports.map(passkeyTransportLabel).join('、')
+                      : '—'
+                  let createdLabel = p.created_at
+                  try {
+                    createdLabel = new Date(p.created_at).toLocaleString()
+                  } catch {
+                    /* keep raw */
+                  }
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex flex-col gap-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0 flex flex-col gap-1">
+                        <Text className="font-medium">{passkeyAttachmentLabel(p.attachment)}</Text>
+                        <Text size="sm" variant="muted">
+                          连接方式：{transports}
+                        </Text>
+                        <Text size="sm" variant="muted">
+                          绑定时间：{createdLabel} · 签名计数：{p.sign_count}
+                        </Text>
+                        {backup ? (
+                          <Text size="sm" variant="muted">
+                            {backup}
+                          </Text>
+                        ) : null}
+                        {p.aaguid_hex ? (
+                          <Text
+                            size="xs"
+                            variant="muted"
+                            className="break-all font-mono opacity-80"
+                          >
+                            认证器 AAGUID：{p.aaguid_hex}
+                          </Text>
+                        ) : null}
+                      </div>
+                      <Button
+                        variant="secondary"
+                        className="shrink-0 self-start sm:self-center"
+                        isDisabled={passkeyDeletingId !== null}
+                        onPress={async () => {
+                          if (
+                            !window.confirm(
+                              '确定移除此通行密钥？移除后须重新绑定方可再用该设备登录。',
+                            )
+                          ) {
+                            return
+                          }
+                          setPasskeyDeletingId(p.id)
+                          try {
+                            await deletePasskeyCredential(p.id)
+                            toast.success('已移除通行密钥')
+                            void mutatePasskeyList()
+                          } catch (e) {
+                            toast.warning(e instanceof Error ? e.message : '移除失败')
+                          } finally {
+                            setPasskeyDeletingId(null)
+                          }
+                        }}
+                      >
+                        {passkeyDeletingId === p.id ? (
+                          <>
+                            <i className="ri-loader-4-line animate-spin" />
+                            移除中…
+                          </>
+                        ) : (
+                          <>
+                            <i className="ri-delete-bin-line" />
+                            移除绑定
+                          </>
+                        )}
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : null}
+
+            <Button
+              variant="secondary"
+              isDisabled={
+                !webAuthnSupported() || passkeyBusy || passkeyDeletingId !== null
+              }
+              onPress={async () => {
+                setPasskeyBusy(true)
+                try {
+                  await registerPasskey()
+                  void mutatePasskeyList()
+                } catch (e) {
+                  toast.warning(e instanceof Error ? e.message : '绑定失败')
+                } finally {
+                  setPasskeyBusy(false)
+                }
+              }}
+            >
+              {passkeyBusy ? (
+                <>
+                  <i className="ri-loader-4-line animate-spin" />
+                  正在等待系统验证…
+                </>
+              ) : (
+                <>
+                  <i className="ri-fingerprint-line" />
+                  绑定新的通行密钥
+                </>
+              )}
+            </Button>
+            {!webAuthnSupported() ? (
+              <Text size="sm" variant="muted">
+                当前浏览器不支持 WebAuthn
+              </Text>
+            ) : (
+              <Text size="sm" variant="muted">
+                可在多台电脑、手机或安全密钥上分别完成绑定；列表中会各占一行。
+              </Text>
+            )}
           </div>
         </SettingRow>
 

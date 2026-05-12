@@ -28,6 +28,21 @@ export type CaptchaResp = {
 
 export type MeData = LoginUser
 
+export type PasskeyCredentialItem = {
+  id: number
+  transports: string[]
+  attachment: string
+  backup_eligible: boolean
+  backup_state: boolean
+  sign_count: number
+  created_at: string
+  aaguid_hex?: string
+}
+
+export type PasskeyCredentialListData = {
+  list: PasskeyCredentialItem[]
+}
+
 /** 与 pkg/errcode.Forbidden 一致 */
 export const ERR_FORBIDDEN = 40301
 

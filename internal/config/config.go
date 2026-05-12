@@ -69,14 +69,22 @@ type Static struct {
 	PublicRoot string `mapstructure:"public_root"`
 }
 
+// WebAuthn 通行密钥（FIDO2 / passkey）；RPID 须与浏览器地址主机名一致（不含端口）。
+type WebAuthn struct {
+	RPDisplayName string   `mapstructure:"rp_display_name"`
+	RPID          string   `mapstructure:"rp_id"`
+	Origins       []string `mapstructure:"origins"`
+}
+
 type Config struct {
-	Server Server `mapstructure:"server"`
-	Log    Log    `mapstructure:"log"`
-	MySQL  MySQL  `mapstructure:"mysql"`
-	Redis  Redis  `mapstructure:"redis"`
-	JWT    JWT    `mapstructure:"jwt"`
-	CORS   CORS   `mapstructure:"cors"`
-	Static Static `mapstructure:"static"`
+	Server   Server   `mapstructure:"server"`
+	Log      Log      `mapstructure:"log"`
+	MySQL    MySQL    `mapstructure:"mysql"`
+	Redis    Redis    `mapstructure:"redis"`
+	JWT      JWT      `mapstructure:"jwt"`
+	CORS     CORS     `mapstructure:"cors"`
+	Static   Static   `mapstructure:"static"`
+	WebAuthn WebAuthn `mapstructure:"webauthn"`
 }
 
 func Load(configPath string) (*Config, error) {
@@ -157,6 +165,21 @@ func Load(configPath string) (*Config, error) {
 
 	cfg.Static.UploadRoot = strings.TrimSpace(cfg.Static.UploadRoot)
 	cfg.Static.PublicRoot = strings.TrimSpace(cfg.Static.PublicRoot)
+
+	cfg.WebAuthn.RPID = strings.TrimSpace(cfg.WebAuthn.RPID)
+	cfg.WebAuthn.RPDisplayName = strings.TrimSpace(cfg.WebAuthn.RPDisplayName)
+	if cfg.WebAuthn.RPID == "" {
+		cfg.WebAuthn.RPID = "localhost"
+	}
+	if cfg.WebAuthn.RPDisplayName == "" {
+		cfg.WebAuthn.RPDisplayName = "NEXORA Admin"
+	}
+	if len(cfg.WebAuthn.Origins) == 0 {
+		cfg.WebAuthn.Origins = []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+		}
+	}
 
 	return &cfg, nil
 }

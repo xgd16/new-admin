@@ -88,6 +88,52 @@ func (s *Auth) Login(ctx context.Context, username, password string, meta Client
 	}, nil
 }
 
+// LoginWithVerifiedUser 在已通过其他方式核身（如通行密钥）后签发与密码登录一致的会话。
+func (s *Auth) LoginWithVerifiedUser(ctx context.Context, userID uint64, meta ClientMeta) (*model.LoginResp, error) {
+	start := time.Now()
+	meta = NormalizeClientMeta(meta)
+	u, err := s.user.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if u == nil {
+		return nil, ErrAuthUserNotFound
+	}
+	if u.Status != 1 {
+		return nil, ErrAuthUserDisabled
+	}
+	roles, err := s.rbac.RoleCodesByUserID(ctx, u.ID)
+	if err != nil {
+		return nil, err
+	}
+	perms, err := s.rbac.PermissionCodesByUserID(ctx, u.ID)
+	if err != nil {
+		return nil, err
+	}
+	tokenStr, _, err := s.jwt.Sign(u.ID, u.Username)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now()
+	if err := s.user.UpdateLastLoginAt(ctx, u.ID, now); err != nil {
+		s.logger.Warn("last_login_update", zap.Uint64("user_id", u.ID), zap.Error(err))
+	}
+	if s.audit != nil {
+		s.audit.RecordLoginSuccess(u.ID, u.Username, meta, 200, time.Since(start))
+	}
+	return &model.LoginResp{
+		AccessToken: tokenStr,
+		TokenType:   "Bearer",
+		ExpiresIn:   int64(s.ttl / time.Second),
+		User: model.LoginUserDTO{
+			ID:          u.ID,
+			Username:    u.Username,
+			Roles:       roles,
+			Permissions: perms,
+		},
+	}, nil
+}
+
 func (s *Auth) Profile(ctx context.Context, userID uint64) (*model.MeResp, error) {
 	u, err := s.user.FindByID(ctx, userID)
 	if err != nil {

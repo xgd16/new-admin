@@ -10,6 +10,13 @@ import { toast } from '@heroui/react'
 
 import { ADMIN_API_PREFIX, apiRequest, setStoredToken, getStoredToken } from '../api/client'
 import type { LoginData, MeData } from '../api/types'
+import {
+  getPasskeyCreation,
+  getPasskeyRequest,
+  publicKeyCredentialToAssertionJSON,
+  publicKeyCredentialToAttestationJSON,
+  webAuthnSupported,
+} from './webauthnClient'
 import { AuthContext, type AuthCtx, type LogoutOptions } from './authContext'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -87,16 +94,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const loginWithPasskey = useCallback(async (username: string) => {
+    const u = username.trim()
+    if (!u) throw new Error('请输入用户名')
+    if (!webAuthnSupported()) throw new Error('当前浏览器不支持通行密钥')
+    const begin = await apiRequest<{ session_key: string; options: Record<string, unknown> }>(
+      `${ADMIN_API_PREFIX}/auth/passkey/login/begin`,
+      {
+        method: 'POST',
+        skipAuth: true,
+        body: JSON.stringify({ username: u }),
+      },
+    )
+    if (begin.envelope.code !== 0) {
+      throw new Error(begin.envelope.message || '无法开始通行密钥登录')
+    }
+    const { session_key: sessionKey, options: optRaw } = begin.envelope.data
+    const req = getPasskeyRequest(optRaw)
+    const rawCred = await navigator.credentials.get(req)
+    if (!rawCred || !(rawCred instanceof PublicKeyCredential)) {
+      throw new Error('未获得通行密钥（可能已取消）')
+    }
+    const credential = publicKeyCredentialToAssertionJSON(rawCred)
+    const finish = await apiRequest<LoginData>(`${ADMIN_API_PREFIX}/auth/passkey/login/finish`, {
+      method: 'POST',
+      skipAuth: true,
+      body: JSON.stringify({ session_key: sessionKey, credential }),
+    })
+    if (finish.envelope.code !== 0) {
+      throw new Error(finish.envelope.message || '通行密钥验证失败')
+    }
+    const { access_token, user: usr } = finish.envelope.data
+    setStoredToken(access_token)
+    setTokenState(access_token)
+    setUser(usr)
+    toast.success(`登录成功，欢迎 ${usr.username}`)
+  }, [])
+
+  const registerPasskey = useCallback(async () => {
+    if (!webAuthnSupported()) throw new Error('当前浏览器不支持通行密钥')
+    const begin = await apiRequest<{ session_key: string; options: Record<string, unknown> }>(
+      `${ADMIN_API_PREFIX}/auth/passkey/register/begin`,
+      { method: 'POST', body: JSON.stringify({}) },
+    )
+    if (begin.envelope.code !== 0) {
+      throw new Error(begin.envelope.message || '无法开始绑定通行密钥')
+    }
+    const { session_key: sessionKey, options: optRaw } = begin.envelope.data
+    const req = getPasskeyCreation(optRaw)
+    const rawCred = await navigator.credentials.create(req)
+    if (!rawCred || !(rawCred instanceof PublicKeyCredential)) {
+      throw new Error('未完成通行密钥创建（可能已取消）')
+    }
+    const credential = publicKeyCredentialToAttestationJSON(rawCred)
+    const finish = await apiRequest<{ ok: boolean }>(
+      `${ADMIN_API_PREFIX}/auth/passkey/register/finish`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ session_key: sessionKey, credential }),
+      },
+    )
+    if (finish.envelope.code !== 0) {
+      throw new Error(finish.envelope.message || '绑定通行密钥失败')
+    }
+    toast.success('已绑定通行密钥，之后可在登录页使用该设备登录')
+  }, [])
+
   const value = useMemo(
     (): AuthCtx => ({
       token,
       user,
       bootstrapping,
       login,
+      loginWithPasskey,
+      registerPasskey,
       logout,
       refreshProfile,
     }),
-    [bootstrapping, login, logout, refreshProfile, token, user],
+    [bootstrapping, login, loginWithPasskey, logout, refreshProfile, registerPasskey, token, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

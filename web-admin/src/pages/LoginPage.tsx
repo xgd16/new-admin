@@ -6,18 +6,20 @@ import { Alert, Button, Form, Input, InputGroup, Label, Text } from '@heroui/rea
 
 import { fetchLoginCaptcha } from '../api/captcha'
 import { useAuth } from '../auth/authContext'
+import { webAuthnSupported } from '../auth/webauthnClient'
 import { MotionButton } from '../components/Motion'
 import { AnimatePresence, motion, motionTokens } from '../components/motionConfig'
 import { useTheme } from '../theme/themeContext'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { login, token } = useAuth()
+  const { login, token, loginWithPasskey } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [captchaCode, setCaptchaCode] = useState('')
   const [busy, setBusy] = useState(false)
+  const [passkeyBusy, setPasskeyBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const {
@@ -120,7 +122,7 @@ export function LoginPage() {
           <div className="mb-8 flex flex-col gap-2">
             <Text className="text-2xl font-black tracking-tight sm:text-3xl">登录管理后台</Text>
             <Text size="sm" variant="muted">
-              请输入用户名、密码与图形验证码
+              已绑定通行密钥时，可先输入用户名再点「通行密钥」；否则使用下方密码与验证码登录。
             </Text>
           </div>
 
@@ -176,10 +178,58 @@ export function LoginPage() {
                 placeholder="请输入用户名"
                 value={username}
                 onChange={(ev) => setUsername(ev.target.value)}
-                disabled={busy}
+                disabled={busy || passkeyBusy}
                 fullWidth
               />
             </div>
+
+            {webAuthnSupported() ? (
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  fullWidth
+                  isDisabled={busy || passkeyBusy || !username.trim()}
+                  onPress={async () => {
+                    setError(null)
+                    setPasskeyBusy(true)
+                    try {
+                      await loginWithPasskey(username)
+                      navigate('/dashboard', { replace: true })
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : '通行密钥登录失败')
+                    } finally {
+                      setPasskeyBusy(false)
+                    }
+                  }}
+                >
+                  {passkeyBusy ? (
+                    <>
+                      <i className="ri-loader-4-line animate-spin" />
+                      正在等待通行密钥…
+                    </>
+                  ) : (
+                    <>
+                      <i className="ri-fingerprint-line" />
+                      使用通行密钥登录
+                    </>
+                  )}
+                </Button>
+                {!username.trim() ? (
+                  <Text size="sm" variant="muted">
+                    请先填写上方用户名，按钮即可点击（无需填写密码与验证码）。
+                  </Text>
+                ) : null}
+                <div className="flex items-center gap-3 py-1">
+                  <span className="h-px flex-1 bg-[color:var(--border)]" />
+                  <Text className="shrink-0" size="sm" variant="muted">
+                    或使用密码登录
+                  </Text>
+                  <span className="h-px flex-1 bg-[color:var(--border)]" />
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-2">
               <Label className="flex items-center gap-2" htmlFor="login-password">
                 <i className="ri-lock-password-line text-[color:var(--accent)]" />

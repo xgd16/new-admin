@@ -20,6 +20,7 @@ type Deps struct {
 	Audit            *service.Audit
 	Health           *handler.Health
 	Auth             *handler.Auth
+	Passkey          *handler.Passkey
 	Dash             *handler.Dashboard
 	System           *handler.System
 	FrontUser        *handler.FrontUser
@@ -45,10 +46,16 @@ func NewEngine(d Deps) *gin.Engine {
 	public := api.Group("")
 	d.Health.RegisterPublic(public)
 	d.Auth.RegisterPublic(public)
+	if d.Passkey != nil {
+		d.Passkey.RegisterPublic(public)
+	}
 
 	authed := api.Group("")
 	authed.Use(middleware.RequireAuth(d.JWT))
 	d.Auth.RegisterAuthed(authed)
+	if d.Passkey != nil {
+		d.Passkey.RegisterAuthed(authed)
+	}
 
 	dashboardGroup := api.Group("/dashboard")
 	dashboardGroup.Use(

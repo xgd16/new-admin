@@ -72,3 +72,16 @@ type FrontUser struct {
 func (FrontUser) TableName() string {
 	return "front_users"
 }
+
+
+// WebauthnCredentialRow 表 webauthn_credentials（migrations/000005）。
+type WebauthnCredentialRow struct {
+	ID             uint64    `gorm:"column:id;primaryKey;autoIncrement"`
+	UserID         uint64    `gorm:"column:user_id;index:idx_webauthn_cred_user"`
+	CredentialID   []byte    `gorm:"column:credential_id;uniqueIndex:uk_webauthn_credential_id;size:1023"`
+	CredentialJSON []byte    `gorm:"column:credential_json;type:json"`
+	SignCount      uint32    `gorm:"column:sign_count"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
+func (WebauthnCredentialRow) TableName() string { return "webauthn_credentials" }

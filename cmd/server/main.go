@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"go.uber.org/zap"
 
 	"new-admin/internal/config"
@@ -94,6 +96,25 @@ func runServer() {
 	authSvc := service.NewAuth(zapLog.Named("svc"), jwtIss, userRepo, rbacRepo, jwtTTL, auditSvc)
 	captchaSvc := service.NewCaptcha()
 	authH := handler.NewAuth(authSvc, captchaSvc)
+
+	var passkeySvc *service.Passkey
+	wa, waErr := webauthn.New(&webauthn.Config{
+		RPDisplayName: cfg.WebAuthn.RPDisplayName,
+		RPID:          cfg.WebAuthn.RPID,
+		RPOrigins:     cfg.WebAuthn.Origins,
+		AuthenticatorSelection: protocol.AuthenticatorSelection{
+			UserVerification: protocol.VerificationPreferred,
+			ResidentKey:      protocol.ResidentKeyRequirementPreferred,
+		},
+	})
+	if waErr != nil {
+		zapLog.Warn("webauthn_disabled", zap.String("reason", waErr.Error()))
+	} else {
+		webauthnCredRepo := repository.NewWebauthnCred(db)
+		passkeySess := service.NewPasskeySessionStore(rdb)
+		passkeySvc = service.NewPasskey(wa, passkeySess, userRepo, webauthnCredRepo, authSvc)
+	}
+	passkeyH := handler.NewPasskey(passkeySvc)
 	systemSvc := service.NewSystem(userRepo, rbacRepo)
 	systemH := handler.NewSystem(systemSvc, auditSvc)
 	frontUserSvc := service.NewFrontUser(frontUserRepo)
@@ -112,6 +133,7 @@ func runServer() {
 		Audit:            auditSvc,
 		Health:           healthH,
 		Auth:             authH,
+		Passkey:          passkeyH,
 		Dash:             dashH,
 		System:           systemH,
 		FrontUser:        frontUserH,
