@@ -13,13 +13,16 @@ type DashboardStatDay struct {
 	Count int64  `json:"count"`
 }
 
-// DashboardUserStats 用户维度汇总（近 N 日新增 + 按日趋势）。
+// DashboardUserStats 前台用户维度汇总（仅 front_users；含按日趋势与短周期对比）。
 type DashboardUserStats struct {
-	Days            int                `json:"days"`
-	FrontNewInRange int64              `json:"front_new_in_range"`
-	AdminNewInRange int64              `json:"admin_new_in_range"`
-	FrontNewByDay   []DashboardStatDay `json:"front_new_by_day"`
-	AdminNewByDay   []DashboardStatDay `json:"admin_new_by_day"`
+	Days              int                `json:"days"`
+	FrontTotal        int64              `json:"front_total"`
+	FrontEnabled      int64              `json:"front_enabled"`
+	FrontDisabled     int64              `json:"front_disabled"`
+	FrontNewInRange   int64              `json:"front_new_in_range"`
+	FrontNewToday     int64              `json:"front_new_today"`
+	FrontNewYesterday int64              `json:"front_new_yesterday"`
+	FrontNewByDay     []DashboardStatDay `json:"front_new_by_day"`
 }
 
 type DashboardOverviewResp struct {

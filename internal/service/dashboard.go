@@ -70,16 +70,26 @@ func (s *Dashboard) Overview(ctx context.Context) (*model.DashboardOverviewResp,
 	if err != nil {
 		return nil, err
 	}
+	frontDisabled := frontTotal - frontEnabled
+	if frontDisabled < 0 {
+		frontDisabled = 0
+	}
 
 	now := time.Now().In(time.Local)
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	loc := now.Location()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	startOfYesterday := startOfToday.AddDate(0, 0, -1)
 	since := startOfToday.AddDate(0, 0, -dashboardUserTrendDays)
 
 	frontNew, err := s.front.CountCreatedSince(ctx, since)
 	if err != nil {
 		return nil, err
 	}
-	adminNew, err := s.user.CountCreatedSince(ctx, since)
+	frontNewToday, err := s.front.CountCreatedInRange(ctx, startOfToday, startOfToday.AddDate(0, 0, 1))
+	if err != nil {
+		return nil, err
+	}
+	frontNewYesterday, err := s.front.CountCreatedInRange(ctx, startOfYesterday, startOfToday)
 	if err != nil {
 		return nil, err
 	}
@@ -87,15 +97,11 @@ func (s *Dashboard) Overview(ctx context.Context) (*model.DashboardOverviewResp,
 	if err != nil {
 		return nil, err
 	}
-	adminByDayRaw, err := s.user.StatsCreatedByDaySince(ctx, since)
-	if err != nil {
-		return nil, err
-	}
 	dayKeys := dashboardDayKeys(since, startOfToday)
 	frontByDay := fillDashboardByDay(frontByDayRaw, dayKeys)
-	adminByDay := fillDashboardByDay(adminByDayRaw, dayKeys)
 
 	hintTrend := fmt.Sprintf("最近 %d 个自然日", len(dayKeys))
+	hintFrontUser := fmt.Sprintf("启用 %d · 停用 %d", frontEnabled, frontDisabled)
 
 	return &model.DashboardOverviewResp{
 		Title:   "控制台",
@@ -125,31 +131,41 @@ func (s *Dashboard) Overview(ctx context.Context) (*model.DashboardOverviewResp,
 			{
 				Label: "前台用户",
 				Value: fmt.Sprintf("%d", frontTotal),
-				Hint:  fmt.Sprintf("启用 %d", frontEnabled),
+				Hint:  hintFrontUser,
 				Icon:  "ri-user-heart-line",
 				Tone:  "var(--warning)",
 			},
 			{
-				Label: "新增前台",
-				Value: fmt.Sprintf("%d", frontNew),
-				Hint:  hintTrend,
-				Icon:  "ri-user-add-line",
+				Label: "前台·今日新增",
+				Value: fmt.Sprintf("%d", frontNewToday),
+				Hint:  "按注册时间（本地日）",
+				Icon:  "ri-calendar-todo-line",
 				Tone:  "var(--accent)",
 			},
 			{
-				Label: "新增后台",
-				Value: fmt.Sprintf("%d", adminNew),
-				Hint:  hintTrend,
-				Icon:  "ri-user-follow-line",
+				Label: "前台·昨日新增",
+				Value: fmt.Sprintf("%d", frontNewYesterday),
+				Hint:  "按注册时间（本地日）",
+				Icon:  "ri-calendar-line",
 				Tone:  "var(--accent-2)",
+			},
+			{
+				Label: "前台·近窗新增",
+				Value: fmt.Sprintf("%d", frontNew),
+				Hint:  hintTrend,
+				Icon:  "ri-line-chart-line",
+				Tone:  "var(--accent-3)",
 			},
 		},
 		UserStats: &model.DashboardUserStats{
-			Days:            len(dayKeys),
-			FrontNewInRange: frontNew,
-			AdminNewInRange: adminNew,
-			FrontNewByDay:   frontByDay,
-			AdminNewByDay:   adminByDay,
+			Days:              len(dayKeys),
+			FrontTotal:        frontTotal,
+			FrontEnabled:      frontEnabled,
+			FrontDisabled:     frontDisabled,
+			FrontNewInRange:   frontNew,
+			FrontNewToday:     frontNewToday,
+			FrontNewYesterday: frontNewYesterday,
+			FrontNewByDay:     frontByDay,
 		},
 	}, nil
 }

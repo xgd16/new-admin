@@ -39,6 +39,14 @@ func (r *FrontUser) CountCreatedSince(ctx context.Context, since time.Time) (int
 	return n, err
 }
 
+// CountCreatedInRange 统计 created_at ∈ [start, end) 的前台注册数（end 不含，便于按自然日切分）。
+func (r *FrontUser) CountCreatedInRange(ctx context.Context, start, end time.Time) (int64, error) {
+	var n int64
+	err := r.db.WithContext(ctx).Model(&model.FrontUser{}).
+		Where("created_at >= ? AND created_at < ?", start, end).Count(&n).Error
+	return n, err
+}
+
 // StatsCreatedByDaySince 按本地日聚合新建前台用户数。
 func (r *FrontUser) StatsCreatedByDaySince(ctx context.Context, since time.Time) ([]model.DashboardStatDay, error) {
 	type row struct {

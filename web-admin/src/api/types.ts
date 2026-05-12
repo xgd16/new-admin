@@ -65,10 +65,13 @@ export type DashboardStatDay = {
 
 export type DashboardUserStats = {
   days: number
+  front_total: number
+  front_enabled: number
+  front_disabled: number
   front_new_in_range: number
-  admin_new_in_range: number
+  front_new_today: number
+  front_new_yesterday: number
   front_new_by_day: DashboardStatDay[]
-  admin_new_by_day: DashboardStatDay[]
 }
 
 export type DashboardOverviewData = {

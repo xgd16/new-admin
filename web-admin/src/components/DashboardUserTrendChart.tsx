@@ -1,135 +1,130 @@
-import { Text } from '@heroui/react'
+import { useMemo } from 'react'
+import { Chip, Text } from '@heroui/react'
+import ReactECharts from 'echarts-for-react'
 
 import type { DashboardStatDay } from '../api/types'
+import { useTheme } from '../theme/themeContext'
 
-function maxCountPair(a: DashboardStatDay[], b: DashboardStatDay[]): number {
-  let m = 1
-  for (const s of [a, b]) {
-    for (const p of s) {
-      if (p.count > m) m = p.count
-    }
-  }
-  return m
+export type DashboardFrontUserSummary = {
+  total: number
+  enabled: number
+  disabled: number
+  today: number
+  yesterday: number
+  inRange: number
 }
 
-/** 轻量折线图：前台 / 后台按日新增（数据来自控制台 overview）。 */
+/** 前台用户按日新增（ECharts）；可选底部摘要条。 */
 export function DashboardUserTrendChart({
-  front,
-  admin,
+  byDay,
+  windowDays,
+  summary,
   daysHint,
 }: {
-  front: DashboardStatDay[]
-  admin: DashboardStatDay[]
+  byDay: DashboardStatDay[]
+  windowDays: number
+  summary?: DashboardFrontUserSummary | null
   daysHint: string
 }) {
-  const n = Math.max(front.length, admin.length, 1)
-  const maxY = maxCountPair(front, admin)
-  const w = 720
-  const h = 220
-  const padL = 40
-  const padR = 16
-  const padT = 16
-  const padB = 32
-  const innerW = w - padL - padR
-  const innerH = h - padT - padB
+  const { theme, paletteId } = useTheme()
 
-  const step = n <= 1 ? 0 : innerW / (n - 1)
+  const { categories, values } = useMemo(() => {
+    const n = byDay.length
+    const cats = Array.from({ length: n }, (_, i) => {
+      const d = byDay[i]
+      return d?.date && d.date.length >= 5 ? d.date.slice(5) : (d?.date ?? '')
+    })
+    const vals = Array.from({ length: n }, (_, i) => byDay[i]?.count ?? 0)
+    return { categories: cats, values: vals }
+  }, [byDay])
 
-  const linePoints = (series: DashboardStatDay[]) =>
-    Array.from({ length: n }, (_, i) => {
-      const x = padL + (n <= 1 ? innerW / 2 : i * step)
-      const c = series[i]?.count ?? 0
-      const y = padT + innerH - (c / maxY) * innerH
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    }).join(' ')
+  const option = useMemo(() => {
+    void theme
+    void paletteId
+    const root = document.documentElement
+    const g = (k: string, fallback: string) =>
+      getComputedStyle(root).getPropertyValue(k).trim() || fallback
+    const accent = g('--accent', '#6366f1')
+    const muted = g('--muted', '#64748b')
+    const border = g('--border', 'rgba(148,163,184,0.35)')
 
-  const polyFront = linePoints(front)
-  const polyAdmin = linePoints(admin)
-
-  const labels = front.length >= admin.length ? front : admin
-  const tickEvery = n <= 7 ? 1 : n <= 14 ? 2 : Math.ceil(n / 7)
-
-  const closedArea = (poly: string) =>
-    `${poly} ${padL + innerW},${padT + innerH} ${padL},${padT + innerH}`
+    return {
+      color: [accent],
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' },
+      },
+      grid: { left: '2%', right: '2%', bottom: '8%', top: 24, containLabel: true },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: categories,
+        axisLabel: { color: muted, fontSize: 11 },
+        axisLine: { lineStyle: { color: border } },
+      },
+      yAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: muted },
+        splitLine: {
+          lineStyle: { color: border, type: 'dashed', opacity: 0.65 },
+        },
+      },
+      series: [
+        {
+          name: '前台新增',
+          type: 'line',
+          smooth: true,
+          symbol: categories.length <= 18 ? ('circle' as const) : 'none',
+          symbolSize: 6,
+          lineStyle: { width: 2 },
+          areaStyle: { opacity: 0.14 },
+          data: values,
+        },
+      ],
+    } as const
+  }, [theme, paletteId, categories, values])
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Text className="text-lg font-bold">用户增长趋势</Text>
+        <Text className="text-lg font-bold">前台用户 · 新增趋势</Text>
         <Text size="sm" variant="muted">
           {daysHint}
         </Text>
       </div>
-      <div className="flex flex-wrap items-center gap-4 text-xs">
-        <span className="inline-flex items-center gap-1.5 font-medium">
-          <span className="size-2.5 rounded-full bg-(--accent)" aria-hidden />
-          前台新增
-        </span>
-        <span className="inline-flex items-center gap-1.5 font-medium">
-          <span className="size-2.5 rounded-full bg-(--accent-2)" aria-hidden />
-          后台新增
-        </span>
-      </div>
-      <div className="w-full overflow-x-auto">
-        <svg
-          className="mx-auto block max-h-55 min-w-[min(100%,720px)] text-muted"
-          viewBox={`0 0 ${w} ${h}`}
-          role="img"
-          aria-label="按日新增用户折线图"
-        >
-          <defs>
-            <linearGradient id="dashFrontFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="dashAdminFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent-2)" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="var(--accent-2)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <line
-            x1={padL}
-            y1={padT + innerH}
-            x2={padL + innerW}
-            y2={padT + innerH}
-            stroke="currentColor"
-            strokeOpacity={0.35}
-            strokeWidth={1}
-          />
-          {labels.map((d, i) => {
-            if (i % tickEvery !== 0 && i !== n - 1) return null
-            const x = padL + (n <= 1 ? innerW / 2 : i * step)
-            const short = d.date.length >= 5 ? d.date.slice(5) : d.date
-            return (
-              <text key={`${d.date}-${i}`} x={x} y={h - 8} textAnchor="middle" className="fill-current text-[10px]">
-                {short}
-              </text>
-            )
-          })}
-          {n > 1 ? (
-            <>
-              <polygon fill="url(#dashFrontFill)" points={closedArea(polyFront)} />
-              <polygon fill="url(#dashAdminFill)" points={closedArea(polyAdmin)} />
-            </>
-          ) : null}
-          <polyline
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            points={polyFront}
-          />
-          <polyline
-            fill="none"
-            stroke="var(--accent-2)"
-            strokeWidth={2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            points={polyAdmin}
-          />
-        </svg>
-      </div>
+      <ReactECharts
+        key={`${theme}-${paletteId}`}
+        option={option}
+        style={{ height: 280, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+        lazyUpdate
+      />
+      {summary ? (
+        <div className="flex flex-col gap-2 border-t border-border pt-3">
+          <Text size="sm" variant="muted">
+            指标快照（{windowDays} 日窗口内累计新增 {summary.inRange}）
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            <Chip size="sm" variant="soft">
+              总计 {summary.total}
+            </Chip>
+            <Chip size="sm" variant="soft" className="text-(--accent-3)">
+              启用 {summary.enabled}
+            </Chip>
+            <Chip size="sm" variant="soft" className="text-(--warning)">
+              停用 {summary.disabled}
+            </Chip>
+            <Chip size="sm" variant="soft">
+              今日 +{summary.today}
+            </Chip>
+            <Chip size="sm" variant="soft">
+              昨日 +{summary.yesterday}
+            </Chip>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

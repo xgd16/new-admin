@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@internationalized/date": "^3.12.1",
     "@heroui/react": "^3.0.3",
     "@heroui/styles": "^3.0.3",
+    "@internationalized/date": "^3.12.1",
     "@tailwindcss/vite": "^4.2.4",
+    "echarts": "^6.0.0",
+    "echarts-for-react": "^3.0.6",
     "framer-motion": "^12.38.0",
     "react": "^19.2.6",
     "react-aria-components": "1.17.0",

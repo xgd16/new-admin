@@ -27,6 +27,7 @@ const loadingPlaceholders: OverviewMetric[] = [
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
   { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
+  { label: '…', value: '—', hint: '加载中', icon: 'ri-loader-4-line', tone: 'var(--muted)' },
 ]
 
 export function OverviewPage() {
@@ -113,9 +114,17 @@ export function OverviewPage() {
             {...motionTokens.item}
           >
             <DashboardUserTrendChart
-              front={overview.user_stats.front_new_by_day}
-              admin={overview.user_stats.admin_new_by_day}
-              daysHint={`统计窗口 ${overview.user_stats.days} 天 · 前台累计新增 ${overview.user_stats.front_new_in_range} · 后台累计新增 ${overview.user_stats.admin_new_in_range}`}
+              byDay={overview.user_stats.front_new_by_day}
+              windowDays={overview.user_stats.days}
+              summary={{
+                total: overview.user_stats.front_total,
+                enabled: overview.user_stats.front_enabled,
+                disabled: overview.user_stats.front_disabled,
+                today: overview.user_stats.front_new_today,
+                yesterday: overview.user_stats.front_new_yesterday,
+                inRange: overview.user_stats.front_new_in_range,
+              }}
+              daysHint={`近 ${overview.user_stats.days} 个自然日 · 按注册时间`}
             />
           </motion.article>
         ) : null}
