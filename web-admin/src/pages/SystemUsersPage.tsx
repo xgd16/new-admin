@@ -24,11 +24,13 @@ import { useTablePageSize } from '../prefs/workspace'
 
 function StatusSelect({
   id,
+  'aria-labelledby': ariaLabelledBy,
   value,
   disabled,
   onChange,
 }: {
   id: string
+  'aria-labelledby'?: string
   value: number
   disabled?: boolean
   onChange: (value: number) => void
@@ -36,6 +38,7 @@ function StatusSelect({
   return (
     <Select
       id={id}
+      aria-labelledby={ariaLabelledBy}
       selectedKey={String(value)}
       isDisabled={disabled}
       onSelectionChange={(key) => {
@@ -63,12 +66,14 @@ function StatusSelect({
 
 function RoleSelect({
   id,
+  'aria-labelledby': ariaLabelledBy,
   roles,
   value,
   disabled,
   onChange,
 }: {
   id: string
+  'aria-labelledby'?: string
   roles: SystemRoleItem[]
   value: number | null
   disabled?: boolean
@@ -87,6 +92,7 @@ function RoleSelect({
   return (
     <Select
       id={id}
+      aria-labelledby={ariaLabelledBy}
       selectedKey={value == null ? undefined : String(value)}
       isDisabled={disabled}
       onSelectionChange={(key) => {
@@ -391,9 +397,12 @@ export function SystemUsersPage() {
             />
           </div>
           <div className="flex flex-col gap-2 lg:col-span-2">
-            <Label htmlFor="su-filter-status">状态</Label>
+            <Label id="su-filter-status-label" htmlFor="su-filter-status">
+              状态
+            </Label>
             <Select
               id="su-filter-status"
+              aria-labelledby="su-filter-status-label"
               selectedKey={draftStatus}
               onSelectionChange={(key) => {
                 if (key == null) return
@@ -421,9 +430,12 @@ export function SystemUsersPage() {
             </Select>
           </div>
           <div className="flex flex-col gap-2 lg:col-span-3">
-            <Label htmlFor="su-filter-role">角色</Label>
+            <Label id="su-filter-role-label" htmlFor="su-filter-role">
+              角色
+            </Label>
             <Select
               id="su-filter-role"
+              aria-labelledby="su-filter-role-label"
               selectedKey={draftRoleKey}
               isDisabled={rolesCatalog.length === 0}
               onSelectionChange={(key) => {
@@ -648,18 +660,24 @@ export function SystemUsersPage() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="su-create-status">状态</Label>
+                <Label id="su-create-status-label" htmlFor="su-create-status">
+                  状态
+                </Label>
                 <StatusSelect
                   id="su-create-status"
+                  aria-labelledby="su-create-status-label"
                   value={createStatus}
                   disabled={createBusy}
                   onChange={setCreateStatus}
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="su-create-role">角色（单选必选）</Label>
+                <Label id="su-create-role-label" htmlFor="su-create-role">
+                  角色（单选必选）
+                </Label>
                 <RoleSelect
                   id="su-create-role"
+                  aria-labelledby="su-create-role-label"
                   roles={rolesCatalog}
                   value={Array.from(createRoleIds)[0] ?? null}
                   disabled={createBusy}
@@ -733,18 +751,24 @@ export function SystemUsersPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="su-edit-status">状态</Label>
+                    <Label id="su-edit-status-label" htmlFor="su-edit-status">
+                      状态
+                    </Label>
                     <StatusSelect
                       id="su-edit-status"
+                      aria-labelledby="su-edit-status-label"
                       value={editStatus}
                       disabled={editBusy}
                       onChange={setEditStatus}
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="su-edit-role">角色（单选）</Label>
+                    <Label id="su-edit-role-label" htmlFor="su-edit-role">
+                      角色（单选）
+                    </Label>
                     <RoleSelect
                       id="su-edit-role"
+                      aria-labelledby="su-edit-role-label"
                       roles={rolesCatalog}
                       value={Array.from(editRoleIds)[0] ?? null}
                       disabled={editBusy}

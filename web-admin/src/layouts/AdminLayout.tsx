@@ -756,48 +756,46 @@ function AdminHeader({
             </div>
             <div className={avatar}>{(user?.username || 'A').slice(0, 1).toUpperCase()}</div>
           </NavLink>
-          <MotionButton
-            className={logoutBtn}
-            onClick={() => setLogoutConfirmOpen(true)}
-            title="退出登录"
-            aria-label="退出登录"
-          >
-            <i className={`ri-logout-box-r-line ${iconBtnGlyph}`} />
-          </MotionButton>
+          <Modal isOpen={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
+            <Modal.Trigger
+              className={logoutBtn}
+              title="退出登录"
+              aria-label="退出登录"
+            >
+              <i className={`ri-logout-box-r-line ${iconBtnGlyph}`} />
+            </Modal.Trigger>
+            <Modal.Backdrop isDismissable={false}>
+              <Modal.Container size="sm" placement="center">
+                <Modal.Dialog>
+                  <Modal.Header>
+                    <Modal.Heading>退出登录</Modal.Heading>
+                  </Modal.Header>
+                  <Modal.Body>
+                    <Text size="sm" variant="muted">
+                      确定要退出当前账号吗？未保存的编辑将丢失。
+                    </Text>
+                  </Modal.Body>
+                  <Modal.Footer>
+                    <Button variant="secondary" onPress={() => setLogoutConfirmOpen(false)}>
+                      取消
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onPress={() => {
+                        setLogoutConfirmOpen(false)
+                        logout()
+                      }}
+                    >
+                      退出登录
+                    </Button>
+                  </Modal.Footer>
+                </Modal.Dialog>
+              </Modal.Container>
+            </Modal.Backdrop>
+          </Modal>
         </div>
       </div>
     </motion.header>
-
-      <Modal isOpen={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
-        <Modal.Backdrop isDismissable={false}>
-          <Modal.Container size="sm" placement="center">
-            <Modal.Dialog>
-              <Modal.Header>
-                <Modal.Heading>退出登录</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body>
-                <Text size="sm" variant="muted">
-                  确定要退出当前账号吗？未保存的编辑将丢失。
-                </Text>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onPress={() => setLogoutConfirmOpen(false)}>
-                  取消
-                </Button>
-                <Button
-                  variant="primary"
-                  onPress={() => {
-                    setLogoutConfirmOpen(false)
-                    logout()
-                  }}
-                >
-                  退出登录
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
     </>
   )
 }

@@ -18,11 +18,13 @@ import { useTablePageSize } from '../prefs/workspace'
 
 function StatusSelect({
   id,
+  'aria-labelledby': ariaLabelledBy,
   value,
   disabled,
   onChange,
 }: {
   id: string
+  'aria-labelledby'?: string
   value: number
   disabled?: boolean
   onChange: (value: number) => void
@@ -30,6 +32,7 @@ function StatusSelect({
   return (
     <Select
       id={id}
+      aria-labelledby={ariaLabelledBy}
       selectedKey={String(value)}
       isDisabled={disabled}
       onSelectionChange={(key) => {
@@ -300,9 +303,12 @@ export function FrontUsersPage() {
             />
           </div>
           <div className="flex flex-col gap-2 lg:col-span-3">
-            <Label htmlFor="fu-filter-status">状态</Label>
+            <Label id="fu-filter-status-label" htmlFor="fu-filter-status">
+              状态
+            </Label>
             <Select
               id="fu-filter-status"
+              aria-labelledby="fu-filter-status-label"
               selectedKey={draftStatus}
               onSelectionChange={(key) => {
                 if (key == null) return
@@ -644,8 +650,16 @@ function FrontUserModal({
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor={`${idPrefix}-status`}>状态</Label>
-                    <StatusSelect id={`${idPrefix}-status`} value={status} disabled={busy} onChange={onStatusChange} />
+                    <Label id={`${idPrefix}-status-label`} htmlFor={`${idPrefix}-status`}>
+                      状态
+                    </Label>
+                    <StatusSelect
+                      id={`${idPrefix}-status`}
+                      aria-labelledby={`${idPrefix}-status-label`}
+                      value={status}
+                      disabled={busy}
+                      onChange={onStatusChange}
+                    />
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-2">

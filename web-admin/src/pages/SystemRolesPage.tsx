@@ -254,41 +254,42 @@ export function SystemRolesPage() {
           {...motionTokens.list}
         >
           <motion.article className="glass-card self-start rounded-xl p-3 sm:p-4" {...motionTokens.item}>
-            <div className="mb-4 border-b border-[color:var(--border)] pb-3">
+            <div className="mb-4 border-b border-border pb-3">
               <Text className="font-bold">角色</Text>
             </div>
-            <ListBox
-              aria-label="角色列表"
-              className="flex flex-col gap-1.5"
-              selectedKeys={selectedRoleId == null ? [] : [String(selectedRoleId)]}
-              selectionMode="single"
-              onSelectionChange={(keys) => {
-                if (keys === 'all') return
-                const next = Array.from(keys)[0]
-                if (next != null) setSelectedRoleId(Number(next))
-              }}
-            >
-              {roles.length === 0 ? (
-                <Text size="sm" variant="muted">
-                  无角色数据
-                </Text>
-              ) : (
-                roles.map((r) => (
+            {roles.length === 0 ? (
+              <Text size="sm" variant="muted">
+                无角色数据
+              </Text>
+            ) : (
+              <ListBox
+                aria-label="角色列表"
+                className="flex flex-col gap-1.5"
+                selectedKeys={selectedRoleId == null ? [] : [String(selectedRoleId)]}
+                selectionMode="single"
+                onSelectionChange={(keys) => {
+                  if (keys === 'all') return
+                  const next = Array.from(keys)[0]
+                  if (next != null) setSelectedRoleId(Number(next))
+                }}
+              >
+                {roles.map((r) => (
                   <ListBox.Item
                     id={String(r.id)}
                     key={r.id}
+                    textValue={`${r.name} ${r.code}`}
                     className={`rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
                       r.id === selectedRoleId
-                        ? 'bg-[color:var(--accent)]/15 text-[color:var(--accent)] ring-2 ring-[color:var(--accent)]/25'
-                        : 'hover:bg-[color:var(--surface-strong)]'
+                        ? 'bg-accent-soft text-(--accent) ring-2 ring-(--accent)/25'
+                        : 'hover:bg-(--surface-strong)'
                     }`}
                   >
                     <div className="font-semibold">{r.name}</div>
-                    <div className="text-xs text-[color:var(--muted)]">{r.code}</div>
+                    <div className="text-xs text-muted">{r.code}</div>
                   </ListBox.Item>
-                ))
-              )}
-            </ListBox>
+                ))}
+              </ListBox>
+            )}
           </motion.article>
 
           <motion.article className="glass-card rounded-xl p-4 sm:p-5" {...motionTokens.item}>
@@ -335,14 +336,14 @@ export function SystemRolesPage() {
               <motion.div className="-m-1 flex max-h-[min(70vh,40rem)] flex-col gap-5 overflow-y-auto p-1 pr-2" {...motionTokens.list}>
                 {groupedPermissions.map(({ group, items }) => (
                   <motion.div key={group} {...motionTokens.item}>
-                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-[color:var(--muted)]">
+                    <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
                       {group}
                     </Text>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {items.map((p) => (
                         <motion.div
                           key={p.id}
-                          className={`rounded-xl border border-[color:var(--border)] p-3 text-sm ${
+                          className={`rounded-xl border border-border p-3 text-sm ${
                             !canWrite ? 'cursor-not-allowed opacity-70' : ''
                           }`}
                           whileHover={canWrite ? { y: -2 } : undefined}
@@ -359,7 +360,7 @@ export function SystemRolesPage() {
                             </Checkbox.Control>
                             <Checkbox.Content>
                               <span className="block font-medium">{p.name}</span>
-                              <span className="mt-0.5 block font-mono text-xs text-[color:var(--muted)]">
+                              <span className="mt-0.5 block font-mono text-xs text-muted">
                                 {p.code}
                               </span>
                             </Checkbox.Content>
@@ -377,6 +378,14 @@ export function SystemRolesPage() {
       </AnimatePresence>
 
       <Modal isOpen={createOpen} onOpenChange={setCreateOpen}>
+        {/* DialogTrigger 需要 Trigger 子节点；实际打开仍由工具栏 Button + openCreate 控制 */}
+        <Modal.Trigger
+          aria-hidden="true"
+          tabIndex={-1}
+          className="pointer-events-none fixed left-0 top-0 size-0 overflow-hidden border-0 p-0 opacity-0"
+        >
+          {'\u00a0'}
+        </Modal.Trigger>
         <Modal.Backdrop>
           <Modal.Container size="lg" placement="center" scroll="inside">
             <Modal.Dialog>
@@ -423,7 +432,7 @@ export function SystemRolesPage() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label>初始权限</Label>
-                  <div className="flex max-h-56 flex-col gap-3 overflow-y-auto rounded-xl border border-[color:var(--border)] p-3">
+                  <div className="flex max-h-56 flex-col gap-3 overflow-y-auto rounded-xl border border-border p-3">
                     {groupedPermissions.length === 0 ? (
                       <Text size="sm" variant="muted">
                         暂无可选权限
@@ -431,7 +440,7 @@ export function SystemRolesPage() {
                     ) : (
                       groupedPermissions.map(({ group, items }) => (
                         <div key={group}>
-                          <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-[color:var(--muted)]">
+                          <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
                             {group}
                           </Text>
                           <div className="flex flex-col gap-2">
@@ -454,7 +463,7 @@ export function SystemRolesPage() {
                                 </Checkbox.Control>
                                 <Checkbox.Content>
                                   <span className="block font-medium">{p.name}</span>
-                                  <span className="mt-0.5 block font-mono text-xs text-[color:var(--muted)]">
+                                  <span className="mt-0.5 block font-mono text-xs text-muted">
                                     {p.code}
                                   </span>
                                 </Checkbox.Content>

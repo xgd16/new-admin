@@ -575,9 +575,12 @@ export function OperationLogsPage() {
           <div className="flex flex-col gap-3">
             <div className="grid gap-4 sm:grid-cols-12 sm:items-end">
               <div className="flex flex-col gap-2 sm:col-span-12 lg:col-span-3">
-                <Label htmlFor="oplog-filter-op">操作类型</Label>
+                <Label id="oplog-filter-op-label" htmlFor="oplog-filter-op">
+                  操作类型
+                </Label>
                 <Select
                   id="oplog-filter-op"
+                  aria-labelledby="oplog-filter-op-label"
                   selectedKey={draftOperation}
                   onSelectionChange={(key) => {
                     if (key == null) return
@@ -602,9 +605,12 @@ export function OperationLogsPage() {
                 </Select>
               </div>
               <div className="flex flex-col gap-2 sm:col-span-6 lg:col-span-3">
-                <Label htmlFor="oplog-filter-field">搜索范围</Label>
+                <Label id="oplog-filter-field-label" htmlFor="oplog-filter-field">
+                  搜索范围
+                </Label>
                 <Select
                   id="oplog-filter-field"
+                  aria-labelledby="oplog-filter-field-label"
                   selectedKey={draftField}
                   onSelectionChange={(key) => {
                     if (key == null) return
