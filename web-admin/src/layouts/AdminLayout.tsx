@@ -96,7 +96,12 @@ export function AdminLayout() {
           transition={motionTokens.softSpring}
         >
           {sidebarDual ? (
-            <DualColumnSidebar compact={sidebarCompact} navRoot={sidebarNavRoot} pathname={pathname} />
+            <DualColumnSidebar
+              compact={sidebarCompact}
+              navRoot={sidebarNavRoot}
+              pathname={pathname}
+              onClearAuxSelection={() => setGroupManualOpen({})}
+            />
           ) : (
             <>
           {sidebarIconRail ? (
@@ -175,6 +180,9 @@ export function AdminLayout() {
                     }
                     end={node.path === '/dashboard'}
                     to={node.path}
+                    onClick={() => {
+                      if (node.path === '/dashboard') setGroupManualOpen({})
+                    }}
                   >
                     <i className={`${node.icon} text-lg`} />
                     <span className="sr-only">{node.label}</span>
@@ -187,6 +195,9 @@ export function AdminLayout() {
                     }
                     end={node.path === '/dashboard'}
                     to={node.path}
+                    onClick={() => {
+                      if (node.path === '/dashboard') setGroupManualOpen({})
+                    }}
                   >
                     <i className={`${node.icon} ${sidebarCompact ? 'text-base' : 'text-lg'}`} />
                     <span>{node.label}</span>
@@ -262,7 +273,9 @@ export function AdminLayout() {
                   <div className="flex flex-col gap-3 px-1">
                     {sidebarNavRoot.children.map((node) => (
                       <div key={isNavGroup(node) ? node.id : node.path}>
-                        {renderMobileNavNode(node, () => setMobileMenuOpen(false))}
+                        {renderMobileNavNode(node, () => setMobileMenuOpen(false), () =>
+                          setGroupManualOpen({}),
+                        )}
                       </div>
                     ))}
                     <div className="border-t border-[color:var(--border)] pt-3">
@@ -306,10 +319,13 @@ function DualColumnSidebar({
   navRoot,
   pathname,
   compact,
+  onClearAuxSelection,
 }: {
   navRoot: AdminNavGroup
   pathname: string
   compact: boolean
+  /** 点击「总览」等复位操作时，清空单栏模式下遗留的分组展开记忆 */
+  onClearAuxSelection?: () => void
 }) {
   const pathSegment = useMemo(
     () => dualSidebarSegmentForPath(navRoot.children, pathname),
@@ -362,6 +378,12 @@ function DualColumnSidebar({
                 className={({ isActive }) => `${mainRailBtn} ${isActive ? 'nav-item-active' : ''}`}
                 end={node.path === '/dashboard'}
                 to={node.path}
+                onClick={() => {
+                  if (node.path === '/dashboard') {
+                    setSegmentOverride(null)
+                    onClearAuxSelection?.()
+                  }
+                }}
               >
                 <i className={`${node.icon} text-lg`} />
                 <span className={mainRailLabel}>{node.label}</span>
@@ -471,14 +493,21 @@ function SidebarRailGroup({ group, pathname }: { group: AdminNavGroup; pathname:
   )
 }
 
-function renderMobileNavNode(node: AdminNavNode, onNav: () => void): ReactNode {
+function renderMobileNavNode(
+  node: AdminNavNode,
+  onNav: () => void,
+  onDashboardClick?: () => void,
+): ReactNode {
   if (!isNavGroup(node)) {
     return (
       <NavLink
         className={({ isActive }) =>
           `nav-item flex w-fit shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${isActive ? 'nav-item-active' : ''}`
         }
-        onClick={onNav}
+        onClick={() => {
+          if (node.path === '/dashboard') onDashboardClick?.()
+          onNav()
+        }}
         end={node.path === '/dashboard'}
         to={node.path}
       >
@@ -492,7 +521,9 @@ function renderMobileNavNode(node: AdminNavNode, onNav: () => void): ReactNode {
       <span className="px-1 text-sm font-bold uppercase tracking-wider text-[color:var(--faint)]">
         {node.label}
       </span>
-      <div className="flex flex-wrap gap-2">{node.children.map((c) => renderMobileNavNode(c, onNav))}</div>
+      <div className="flex flex-wrap gap-2">
+        {node.children.map((c) => renderMobileNavNode(c, onNav, onDashboardClick))}
+      </div>
     </div>
   )
 }

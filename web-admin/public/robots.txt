@@ -1,0 +1,6 @@
+# Admin SPA: block well-behaved crawlers from indexing the console.
+# Note: malicious bots ignore robots.txt; use auth and network policy for real protection.
+
+User-agent: *
+Disallow: /
+

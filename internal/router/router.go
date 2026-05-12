@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -10,6 +12,9 @@ import (
 	"new-admin/internal/repository"
 	"new-admin/internal/service"
 )
+
+// robotsTxtBody 与 web-admin/public/robots.txt 策略一致：拒绝遵守规范的爬虫索引。
+const robotsTxtBody = "# Admin: disallow indexing\nUser-agent: *\nDisallow: /\n"
 
 type Deps struct {
 	Log              *zap.Logger
@@ -40,6 +45,10 @@ func NewEngine(d Deps) *gin.Engine {
 	}
 	e.Use(middleware.ZapAccessLog(access))
 	e.Use(middleware.CORS(d.CORSAllowOrigins))
+
+	e.GET("/robots.txt", func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(robotsTxtBody))
+	})
 
 	api := e.Group("/admin/v1")
 
