@@ -115,3 +115,30 @@ export type OperationLogListResp = {
   list: OperationLogListItem[]
   total: number
 }
+
+export type OperationLogStatCountItem = {
+  key: string
+  count: number
+}
+
+export type OperationLogStatDayItem = {
+  date: string
+  count: number
+}
+
+export type OperationLogStatUserItem = {
+  user_id: number
+  username: string
+  count: number
+}
+
+export type OperationLogStatsResp = {
+  days: number
+  since: string
+  total_in_range: number
+  avg_duration_ms: number
+  by_method: OperationLogStatCountItem[]
+  by_status_bucket: OperationLogStatCountItem[]
+  by_day: OperationLogStatDayItem[]
+  top_users: OperationLogStatUserItem[]
+}

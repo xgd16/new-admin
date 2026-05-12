@@ -51,6 +51,40 @@ func clampStr(s string, max int) string {
 	return s[:max]
 }
 
+var opLogSearchFields = map[string]struct{}{
+	"all": {}, "username": {}, "path": {}, "query": {}, "method": {}, "ip": {}, "user_agent": {}, "status": {}, "user_id": {},
+}
+
+func normalizeOpLogSearchField(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	if _, ok := opLogSearchFields[s]; ok {
+		return s
+	}
+	return "all"
+}
+
+var opLogOperationKeys = map[string]struct{}{
+	"auth_login": {},
+	"system_user_create": {},
+	"system_user_update": {},
+	"system_role_create": {},
+	"system_role_permissions": {},
+	"front_user_create": {},
+	"front_user_update": {},
+}
+
+// normalizeOpLogOperation 返回 repository 识别的 operation 键；非法值视为不筛选（空串）。
+func normalizeOpLogOperation(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	if s == "all" || s == "" {
+		return ""
+	}
+	if _, ok := opLogOperationKeys[s]; ok {
+		return s
+	}
+	return ""
+}
+
 // RecordDetached 异步写入，避免拖慢接口；失败仅打日志。
 func (s *Audit) RecordDetached(row *model.AdminOperationLog) {
 	if s == nil || s.repo == nil {
@@ -87,7 +121,7 @@ func (s *Audit) RecordLoginSuccess(userID uint64, username string, meta ClientMe
 	})
 }
 
-func (s *Audit) ListLogs(ctx context.Context, page, pageSize int) (*model.AdminOperationLogListResp, error) {
+func (s *Audit) ListLogs(ctx context.Context, page, pageSize int, keyword, field, operation string) (*model.AdminOperationLogListResp, error) {
 	if s == nil || s.repo == nil {
 		return &model.AdminOperationLogListResp{List: []model.AdminOperationLogListItem{}, Total: 0}, nil
 	}
@@ -100,12 +134,15 @@ func (s *Audit) ListLogs(ctx context.Context, page, pageSize int) (*model.AdminO
 	if pageSize > 100 {
 		pageSize = 100
 	}
-	total, err := s.repo.Count(ctx)
+	keyword = strings.TrimSpace(keyword)
+	field = normalizeOpLogSearchField(field)
+	operation = normalizeOpLogOperation(operation)
+	total, err := s.repo.Count(ctx, keyword, field, operation)
 	if err != nil {
 		return nil, err
 	}
 	offset := (page - 1) * pageSize
-	logs, err := s.repo.ListDesc(ctx, offset, pageSize)
+	logs, err := s.repo.ListDesc(ctx, offset, pageSize, keyword, field, operation)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +166,86 @@ func (s *Audit) ListLogs(ctx context.Context, page, pageSize int) (*model.AdminO
 	return &model.AdminOperationLogListResp{List: items, Total: total}, nil
 }
 
+const (
+	opLogStatsDaysDefault = 14
+	opLogStatsDaysMin     = 1
+	opLogStatsDaysMax     = 90
+)
+
+func clampOpLogStatsDays(n int) int {
+	if n < opLogStatsDaysMin {
+		return opLogStatsDaysDefault
+	}
+	if n > opLogStatsDaysMax {
+		return opLogStatsDaysMax
+	}
+	return n
+}
+
+// OperationLogStats 返回近若干自然日（从「今日零点」往前数 days 天的凌晨）起至当前的聚合统计。
+func (s *Audit) OperationLogStats(ctx context.Context, days int) (*model.OperationLogStatsResp, error) {
+	if s == nil || s.repo == nil {
+		d := clampOpLogStatsDays(days)
+		return &model.OperationLogStatsResp{
+			Days:           d,
+			ByMethod:       []model.OpLogStatCountItem{},
+			ByStatusBucket: []model.OpLogStatCountItem{},
+			ByDay:          []model.OpLogStatDayItem{},
+			TopUsers:       []model.OpLogStatUserItem{},
+		}, nil
+	}
+	days = clampOpLogStatsDays(days)
+	now := time.Now().In(time.Local)
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	since := startOfToday.AddDate(0, 0, -days)
+
+	total, err := s.repo.CountSince(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	avg, err := s.repo.AvgDurationSince(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	byMethod, err := s.repo.StatsByMethodSince(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	byStatus, err := s.repo.StatsByStatusBucketSince(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	byDay, err := s.repo.StatsByDaySince(ctx, since)
+	if err != nil {
+		return nil, err
+	}
+	topUsers, err := s.repo.TopUsersSince(ctx, since, 10)
+	if err != nil {
+		return nil, err
+	}
+	return &model.OperationLogStatsResp{
+		Days:           days,
+		Since:          since,
+		TotalInRange:   total,
+		AvgDurationMs:  avg,
+		ByMethod:       byMethod,
+		ByStatusBucket: byStatus,
+		ByDay:          byDay,
+		TopUsers:       topUsers,
+	}, nil
+}
+
 // ExportOperationLogsXLSX 将最近至多 limit 条操作日志导出为 xlsx；limit 会被限制在合理范围内。
-func (s *Audit) ExportOperationLogsXLSX(ctx context.Context, limit int) ([]byte, string, error) {
+// keyword、field 与列表接口 q、field 语义一致。
+func (s *Audit) ExportOperationLogsXLSX(ctx context.Context, limit int, keyword, field, operation string) ([]byte, string, error) {
 	if s == nil || s.repo == nil {
 		return nil, "", errors.New("audit: nil")
 	}
 	limit = clampExportOpLogLimit(limit)
-	logs, err := s.repo.ListDescLimited(ctx, limit)
+	keyword = strings.TrimSpace(keyword)
+	field = normalizeOpLogSearchField(field)
+	operation = normalizeOpLogOperation(operation)
+	logs, err := s.repo.ListDescLimited(ctx, limit, keyword, field, operation)
 	if err != nil {
 		return nil, "", err
 	}

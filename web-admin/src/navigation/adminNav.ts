@@ -21,6 +21,39 @@ export function isNavGroup(node: AdminNavNode): node is AdminNavGroup {
   return 'children' in node && Array.isArray(node.children)
 }
 
+export function pathMatchesLeaf(pathname: string, leafPath: string): boolean {
+  return pathname === leafPath || pathname.startsWith(`${leafPath}/`)
+}
+
+export function groupHasActiveDescendant(g: AdminNavGroup, pathname: string): boolean {
+  return g.children.some((c) =>
+    isNavGroup(c) ? groupHasActiveDescendant(c, pathname) : pathMatchesLeaf(pathname, c.path),
+  )
+}
+
+/** 双栏侧栏：当前路由对应的一级主菜单段（用于右侧子菜单） */
+export type DualSidebarMainSegment =
+  | { kind: 'leaf'; leaf: AdminNavLeaf }
+  | { kind: 'group'; group: AdminNavGroup }
+  | { kind: 'footer' }
+
+export function dualSidebarSegmentForPath(nodes: AdminNavNode[], pathname: string): DualSidebarMainSegment {
+  if (pathMatchesLeaf(pathname, ADMIN_SIDEBAR_FOOTER_LINK.path)) {
+    return { kind: 'footer' }
+  }
+  for (const n of nodes) {
+    if (!isNavGroup(n)) {
+      if (pathMatchesLeaf(pathname, n.path)) return { kind: 'leaf', leaf: n }
+    } else if (groupHasActiveDescendant(n, pathname)) {
+      return { kind: 'group', group: n }
+    }
+  }
+  const first = nodes[0]
+  if (!first) return { kind: 'footer' }
+  if (!isNavGroup(first)) return { kind: 'leaf', leaf: first }
+  return { kind: 'group', group: first }
+}
+
 /** 固定在侧边栏底部的入口（不参与分组折叠树） */
 export const ADMIN_SIDEBAR_FOOTER_LINK: AdminNavLeaf = {
   path: '/settings',

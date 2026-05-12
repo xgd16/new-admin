@@ -7,6 +7,15 @@ export type PaletteId = (typeof PALETTE_IDS)[number]
 
 export const DEFAULT_PALETTE_ID: PaletteId = 'indigo'
 
+/** 浅色下主色 / 辅色 / 点缀，与 `palettes.css` 及 `:root` 默认一致，供设置页预览 */
+export const PALETTE_LIGHT_SWATCHES: Record<PaletteId, readonly [string, string, string]> = {
+  indigo: ['#4f46e5', '#06b6d4', '#22c55e'],
+  rose: ['#e11d48', '#db2777', '#22c55e'],
+  emerald: ['#059669', '#0d9488', '#65a30d'],
+  amber: ['#d97706', '#ca8a04', '#ea580c'],
+  slate: ['#475569', '#64748b', '#0284c7'],
+}
+
 export const PALETTE_OPTIONS: {
   id: PaletteId
   label: string

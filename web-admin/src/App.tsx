@@ -6,7 +6,7 @@ import {
   useRoutes,
 } from 'react-router-dom'
 
-import { Spinner, Text } from '@heroui/react'
+import { Spinner, Text, Toast } from '@heroui/react'
 import { I18nProvider } from 'react-aria-components'
 
 import { AuthProvider } from './auth/AuthProvider'
@@ -81,6 +81,8 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <I18nProvider locale="zh-CN">
+          {/* ToastRegion 无队列内容时返回 null；若包裹整站会导致白屏，须与业务树并列 */}
+          <Toast.Provider placement="top" />
           <AuthProvider>
             <BootGate>
               <AppRoutes />

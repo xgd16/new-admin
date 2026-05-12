@@ -34,6 +34,7 @@ func (h *System) Register(r *gin.RouterGroup, jwt *jwtissuer.Issuer, rbac *repos
 	g.Use(middleware.AuditAuthenticatedWrites(h.audit))
 
 	og := g.Group("/system/operation-logs")
+	og.GET("/stats", middleware.RequirePermission("system:audit:read", rbac, log), h.operationLogStats)
 	og.GET("/export", middleware.RequirePermission("system:audit:read", rbac, log), h.exportOperationLogs)
 	og.GET("", middleware.RequirePermission("system:audit:read", rbac, log), h.listOperationLogs)
 
@@ -80,7 +81,20 @@ func parseUint64Param(c *gin.Context, key string) (uint64, bool) {
 func (h *System) listOperationLogs(c *gin.Context) {
 	page := parseQueryInt(c, "page", 1)
 	pageSize := parseQueryInt(c, "page_size", 20)
-	out, err := h.audit.ListLogs(c.Request.Context(), page, pageSize)
+	q := strings.TrimSpace(c.Query("q"))
+	field := strings.TrimSpace(c.Query("field"))
+	operation := strings.TrimSpace(c.Query("operation"))
+	out, err := h.audit.ListLogs(c.Request.Context(), page, pageSize, q, field, operation)
+	if err != nil {
+		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
+		return
+	}
+	response.OK(c, out)
+}
+
+func (h *System) operationLogStats(c *gin.Context) {
+	days := parseQueryInt(c, "days", 14)
+	out, err := h.audit.OperationLogStats(c.Request.Context(), days)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "服务异常")
 		return
@@ -96,7 +110,10 @@ func (h *System) exportOperationLogs(c *gin.Context) {
 	if limit > 50_000 {
 		limit = 50_000
 	}
-	data, filename, err := h.audit.ExportOperationLogsXLSX(c.Request.Context(), limit)
+	q := strings.TrimSpace(c.Query("q"))
+	field := strings.TrimSpace(c.Query("field"))
+	operation := strings.TrimSpace(c.Query("operation"))
+	data, filename, err := h.audit.ExportOperationLogsXLSX(c.Request.Context(), limit, q, field, operation)
 	if err != nil {
 		response.Fail(c, http.StatusInternalServerError, errcode.InternalError, "导出失败")
 		return

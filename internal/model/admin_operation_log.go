@@ -41,3 +41,31 @@ type AdminOperationLogListResp struct {
 	List  []AdminOperationLogListItem `json:"list"`
 	Total int64                       `json:"total"`
 }
+
+// OperationLogStatsResp 时间窗口内聚合统计（用于操作日志页看板）。
+type OperationLogStatsResp struct {
+	Days           int                  `json:"days"`
+	Since          time.Time            `json:"since"`
+	TotalInRange   int64                `json:"total_in_range"`
+	AvgDurationMs  float64              `json:"avg_duration_ms"`
+	ByMethod       []OpLogStatCountItem `json:"by_method"`
+	ByStatusBucket []OpLogStatCountItem `json:"by_status_bucket"`
+	ByDay          []OpLogStatDayItem   `json:"by_day"`
+	TopUsers       []OpLogStatUserItem  `json:"top_users"`
+}
+
+type OpLogStatCountItem struct {
+	Key   string `json:"key"`
+	Count int64  `json:"count"`
+}
+
+type OpLogStatDayItem struct {
+	Date  string `json:"date"` // YYYY-MM-DD
+	Count int64  `json:"count"`
+}
+
+type OpLogStatUserItem struct {
+	UserID   uint64 `json:"user_id"`
+	Username string `json:"username"`
+	Count    int64  `json:"count"`
+}

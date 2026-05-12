@@ -11,8 +11,16 @@ export const REDUCE_MOTION_KEY = 'new_admin_reduce_motion'
 /** 桌面端左侧栏紧凑布局（更小留白与字号） */
 export const SIDEBAR_COMPACT_KEY = 'new_admin_sidebar_compact'
 
-/** 桌面端左侧菜单仅显示图标窄栏（仅 lg+；移动端不受影响） */
+/** 桌面端左侧菜单仅显示图标窄栏（仅 lg+；移动端不受影响）；与「双栏菜单」二选一时以双栏为准 */
 export const SIDEBAR_FOLDED_KEY = 'new_admin_sidebar_folded'
+
+/** 桌面端双栏菜单：主菜单（图标列）+ 子菜单（文字列表），仅 lg+ */
+export const SIDEBAR_DUAL_MENU_KEY = 'new_admin_sidebar_dual_menu'
+
+/** 侧边栏菜单项选中样式与悬停动画 */
+export const SIDEBAR_NAV_STYLE_KEY = 'new_admin_sidebar_nav_style'
+
+export type SidebarNavStyle = 'line' | 'pill' | 'glow'
 
 /** 滚动条：overlay 完全隐藏滚动条仍可滚动；visible 始终显示便于发现可滚动区域 */
 export const SCROLLBAR_PREF_KEY = 'new_admin_scrollbar_pref'
@@ -124,6 +132,55 @@ export function useSidebarFolded(): [boolean, (on: boolean) => void] {
     }
   }, [])
   return [on, setSidebarFolded]
+}
+
+export function getSidebarDualMenu(): boolean {
+  return localStorage.getItem(SIDEBAR_DUAL_MENU_KEY) === '1'
+}
+
+export function setSidebarDualMenu(on: boolean): void {
+  if (on) localStorage.setItem(SIDEBAR_DUAL_MENU_KEY, '1')
+  else localStorage.removeItem(SIDEBAR_DUAL_MENU_KEY)
+  window.dispatchEvent(new CustomEvent(PREFS_CHANGED_EVENT))
+}
+
+export function useSidebarDualMenu(): [boolean, (on: boolean) => void] {
+  const [on, setOn] = useState(getSidebarDualMenu)
+  useEffect(() => {
+    const sync = () => setOn(getSidebarDualMenu())
+    window.addEventListener(PREFS_CHANGED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(PREFS_CHANGED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+  return [on, setSidebarDualMenu]
+}
+
+export function getSidebarNavStyle(): SidebarNavStyle {
+  const raw = localStorage.getItem(SIDEBAR_NAV_STYLE_KEY)
+  if (raw === 'pill' || raw === 'glow' || raw === 'line') return raw
+  return 'line'
+}
+
+export function setSidebarNavStyle(style: SidebarNavStyle): void {
+  localStorage.setItem(SIDEBAR_NAV_STYLE_KEY, style)
+  window.dispatchEvent(new CustomEvent(PREFS_CHANGED_EVENT))
+}
+
+export function useSidebarNavStyle(): [SidebarNavStyle, (style: SidebarNavStyle) => void] {
+  const [style, setStyle] = useState(getSidebarNavStyle)
+  useEffect(() => {
+    const sync = () => setStyle(getSidebarNavStyle())
+    window.addEventListener(PREFS_CHANGED_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(PREFS_CHANGED_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
+  }, [])
+  return [style, setSidebarNavStyle]
 }
 
 export function getScrollbarPref(): ScrollbarPref {

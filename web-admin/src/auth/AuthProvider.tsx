@@ -6,16 +6,21 @@ import {
   type ReactNode,
 } from 'react'
 
+import { toast } from '@heroui/react'
+
 import { ADMIN_API_PREFIX, apiRequest, setStoredToken, getStoredToken } from '../api/client'
 import type { LoginData, MeData } from '../api/types'
-import { AuthContext, type AuthCtx } from './authContext'
+import { AuthContext, type AuthCtx, type LogoutOptions } from './authContext'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(() => getStoredToken())
   const [user, setUser] = useState<MeData | null>(null)
   const [bootstrapping, setBootstrapping] = useState(Boolean(getStoredToken()))
 
-  const logout = useCallback(() => {
+  const logout = useCallback((opts?: LogoutOptions) => {
+    if (!opts?.skipToast) {
+      toast.info('已退出登录')
+    }
     setStoredToken(null)
     setTokenState(null)
     setUser(null)
@@ -35,7 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     if (httpStatus === 401 || envelope.code === 40101) {
-      logout()
+      toast.warning(envelope.message?.trim() || '登录已过期，请重新登录')
+      logout({ skipToast: true })
       return
     }
     throw new Error(envelope.message || '加载用户信息失败')
@@ -76,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStoredToken(access_token)
       setTokenState(access_token)
       setUser(u)
+      toast.success(`登录成功，欢迎 ${u.username}`)
     },
     [],
   )

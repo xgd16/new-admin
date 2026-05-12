@@ -11,16 +11,33 @@ import {
   ALLOWED_PAGE_SIZES,
   setTablePageSize,
   type ScrollbarPref,
+  type SidebarNavStyle,
   type TablePageSize,
   useReduceMotionPref,
   useScrollbarPref,
   useSidebarCompact,
+  useSidebarDualMenu,
   useSidebarFolded,
+  useSidebarNavStyle,
   useTablePageSize,
 } from '../prefs/workspace'
-import { PALETTE_OPTIONS, type PaletteId } from '../theme/palette'
+import { PALETTE_OPTIONS, PALETTE_LIGHT_SWATCHES, type PaletteId } from '../theme/palette'
 import { useTheme } from '../theme/themeContext'
 import type { ThemePreference } from '../theme/themeContext'
+
+function PalettePreviewStrip({ id, className = '' }: { id: PaletteId; className?: string }) {
+  const [a, b, c] = PALETTE_LIGHT_SWATCHES[id]
+  return (
+    <span
+      className={`inline-flex shrink-0 gap-px overflow-hidden rounded-md border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-px shadow-[0_1px_2px_rgba(15,23,42,0.07)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.25)] ${className}`}
+      aria-hidden
+    >
+      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: a }} />
+      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: b }} />
+      <span className="size-3.5 rounded-[2px] sm:size-4 sm:rounded-[3px]" style={{ backgroundColor: c }} />
+    </span>
+  )
+}
 
 function SettingRow({
   title,
@@ -55,11 +72,32 @@ const SCROLLBAR_OPTIONS: { id: ScrollbarPref; label: string; hint: string }[] = 
   { id: 'visible', label: '始终显示', hint: '常规滚动条与轨道，更容易看出可滚动区域' },
 ]
 
+const SIDEBAR_LAYOUT_OPTIONS: { id: 'tree' | 'dual'; label: string; hint: string }[] = [
+  {
+    id: 'tree',
+    label: '单栏树形',
+    hint: '左侧一组内可折叠分组与入口；可选「仅图标窄栏」',
+  },
+  {
+    id: 'dual',
+    label: '双栏（主菜单 + 子菜单）',
+    hint: '大屏下左侧图标主菜单 + 旁侧文字子菜单；开启后会自动关闭「仅图标窄栏」',
+  },
+]
+
+const SIDEBAR_NAV_STYLE_OPTIONS: { id: SidebarNavStyle; label: string; hint: string }[] = [
+  { id: 'line', label: '底部强调线 (默认)', hint: '选中时底部出现渐变强调线' },
+  { id: 'pill', label: '面性胶囊', hint: '柔和的纯色背景块，适合喜欢圆润包裹感的人' },
+  { id: 'glow', label: '左侧光柱', hint: '左侧边缘光柱与背景微亮，充满现代感' },
+]
+
 export function SettingsPage() {
   const { themePreference, setThemePreference, paletteId, setPaletteId } = useTheme()
   const [reduceMotion, setReduceMotion] = useReduceMotionPref()
   const [sidebarCompact, setSidebarCompact] = useSidebarCompact()
   const [sidebarFolded, setSidebarFolded] = useSidebarFolded()
+  const [sidebarDual, setSidebarDual] = useSidebarDualMenu()
+  const [sidebarNavStyle, setSidebarNavStyle] = useSidebarNavStyle()
   const pageSize = useTablePageSize()
   const [scrollbarPref, setScrollbarPref] = useScrollbarPref()
 
@@ -133,9 +171,12 @@ export function SettingsPage() {
               <ListBox>
                 {PALETTE_OPTIONS.map((o) => (
                   <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
-                    <div className="flex flex-col py-0.5">
-                      <span className="font-medium">{o.label}</span>
-                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                    <div className="flex items-start gap-3 py-0.5">
+                      <PalettePreviewStrip id={o.id} className="mt-0.5" />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="font-medium">{o.label}</span>
+                        <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                      </div>
                     </div>
                   </ListBox.Item>
                 ))}
@@ -209,6 +250,76 @@ export function SettingsPage() {
         </SettingRow>
 
         <SettingRow
+          title="左侧菜单布局"
+          description="双栏模式下主栏为一级入口（图标）、旁列为子入口（文字）；仅在大屏（lg）生效，手机与平板仍用顶栏折叠菜单。开启双栏后会关闭「仅图标窄栏」以免布局冲突。"
+        >
+          <Select
+            aria-label="左侧菜单布局"
+            selectedKey={sidebarDual ? 'dual' : 'tree'}
+            onSelectionChange={(key) => {
+              if (key == null) return
+              const k = key as 'tree' | 'dual'
+              if (k === 'dual') {
+                setSidebarDual(true)
+                setSidebarFolded(false)
+              } else {
+                setSidebarDual(false)
+              }
+            }}
+            fullWidth
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {SIDEBAR_LAYOUT_OPTIONS.map((o) => (
+                  <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
+                    <div className="flex flex-col py-0.5">
+                      <span className="font-medium">{o.label}</span>
+                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                    </div>
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </SettingRow>
+
+        <SettingRow
+          title="菜单选中样式"
+          description="定制侧边栏菜单项被选中时的视觉反馈，支持下划线、面性胶囊、左侧光柱等多种动画与高亮样式。"
+        >
+          <Select
+            aria-label="菜单选中样式"
+            selectedKey={sidebarNavStyle}
+            onSelectionChange={(key) => {
+              if (key == null) return
+              setSidebarNavStyle(key as SidebarNavStyle)
+            }}
+            fullWidth
+          >
+            <Select.Trigger>
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {SIDEBAR_NAV_STYLE_OPTIONS.map((o) => (
+                  <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
+                    <div className="flex flex-col py-0.5">
+                      <span className="font-medium">{o.label}</span>
+                      <span className="text-xs text-[color:var(--muted)]">{o.hint}</span>
+                    </div>
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
+          </Select>
+        </SettingRow>
+
+        <SettingRow
           title="简洁工作台布局"
           description="同时收窄大屏左侧菜单，并收紧顶栏的内边距、标题字号与操作按钮尺寸（移动端顶栏同样生效）；简洁模式下顶栏不展示页面副标题以留白。"
         >
@@ -229,10 +340,16 @@ export function SettingsPage() {
 
         <SettingRow
           title="大屏图标窄栏"
-          description="仅在桌面宽度将左侧菜单收窄为图标列，点击分组图标可在旁侧展开子菜单；侧栏顶部可恢复完整菜单。手机和平板仍使用顶部折叠菜单，不受影响。"
+          description="仅在桌面宽度将左侧菜单收窄为图标列，点击分组图标可在旁侧展开子菜单；侧栏顶部可恢复完整菜单。手机和平板仍使用顶部折叠菜单，不受影响。开启「双栏菜单」时此项会自动关闭；若当前为单栏树形仍可单独使用。"
         >
-          <div className="settings-option-slab rounded-xl border border-[color:var(--border)] p-4 transition hover:bg-[color:var(--surface-soft)]">
-            <Checkbox isSelected={sidebarFolded} onChange={(on) => setSidebarFolded(on)}>
+          <div
+            className={`settings-option-slab rounded-xl border border-[color:var(--border)] p-4 transition hover:bg-[color:var(--surface-soft)] ${sidebarDual ? 'pointer-events-none opacity-55' : ''}`}
+          >
+            <Checkbox
+              isSelected={sidebarFolded && !sidebarDual}
+              isDisabled={sidebarDual}
+              onChange={(on) => setSidebarFolded(on)}
+            >
               <Checkbox.Control>
                 <Checkbox.Indicator />
               </Checkbox.Control>
