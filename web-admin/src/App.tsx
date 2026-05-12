@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import {
   BrowserRouter,
   Navigate,
@@ -13,15 +13,41 @@ import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
 import { motion } from './components/motionConfig'
 import { AdminLayout } from './layouts/AdminLayout'
-import { FrontUsersPage } from './pages/FrontUsersPage'
-import { LoginPage } from './pages/LoginPage'
-import { OperationLogsPage } from './pages/OperationLogsPage'
-import { OverviewPage } from './pages/OverviewPage'
-import { ProfilePage } from './pages/ProfilePage'
-import { SettingsPage } from './pages/SettingsPage'
-import { SystemRolesPage } from './pages/SystemRolesPage'
-import { SystemUsersPage } from './pages/SystemUsersPage'
 import { ThemeProvider } from './theme/ThemeProvider'
+
+const LoginPage = lazy(() =>
+  import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })),
+)
+const OverviewPage = lazy(() =>
+  import('./pages/OverviewPage').then((m) => ({ default: m.OverviewPage })),
+)
+const FrontUsersPage = lazy(() =>
+  import('./pages/FrontUsersPage').then((m) => ({ default: m.FrontUsersPage })),
+)
+const SystemUsersPage = lazy(() =>
+  import('./pages/SystemUsersPage').then((m) => ({ default: m.SystemUsersPage })),
+)
+const SystemRolesPage = lazy(() =>
+  import('./pages/SystemRolesPage').then((m) => ({ default: m.SystemRolesPage })),
+)
+const OperationLogsPage = lazy(() =>
+  import('./pages/OperationLogsPage').then((m) => ({ default: m.OperationLogsPage })),
+)
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
+)
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+)
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center gap-3">
+      <Spinner size="md" />
+      <Text variant="muted">加载页面…</Text>
+    </div>
+  )
+}
 
 function BootGate({ children }: { children: React.ReactNode }) {
   const { bootstrapping } = useAuth()
@@ -54,28 +80,32 @@ function AppRoutes() {
     document.title = 'Web Admin'
   }, [])
 
-  return useRoutes([
-    { path: '/login', element: <LoginPage /> },
-    {
-      path: '/',
-      element: (
-        <RequireAuth>
-          <AdminLayout />
-        </RequireAuth>
-      ),
-      children: [
-        { index: true, element: <Navigate to="/dashboard" replace /> },
-        { path: 'dashboard', element: <OverviewPage /> },
-        { path: 'front/users', element: <FrontUsersPage /> },
-        { path: 'system/users', element: <SystemUsersPage /> },
-        { path: 'system/roles', element: <SystemRolesPage /> },
-        { path: 'system/operation-logs', element: <OperationLogsPage /> },
-        { path: 'profile', element: <ProfilePage /> },
-        { path: 'settings', element: <SettingsPage /> },
-      ],
-    },
-    { path: '*', element: <Navigate to="/dashboard" replace /> },
-  ])
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      {useRoutes([
+        { path: '/login', element: <LoginPage /> },
+        {
+          path: '/',
+          element: (
+            <RequireAuth>
+              <AdminLayout />
+            </RequireAuth>
+          ),
+          children: [
+            { index: true, element: <Navigate to="/dashboard" replace /> },
+            { path: 'dashboard', element: <OverviewPage /> },
+            { path: 'front/users', element: <FrontUsersPage /> },
+            { path: 'system/users', element: <SystemUsersPage /> },
+            { path: 'system/roles', element: <SystemRolesPage /> },
+            { path: 'system/operation-logs', element: <OperationLogsPage /> },
+            { path: 'profile', element: <ProfilePage /> },
+            { path: 'settings', element: <SettingsPage /> },
+          ],
+        },
+        { path: '*', element: <Navigate to="/dashboard" replace /> },
+      ])}
+    </Suspense>
+  )
 }
 
 export default function App() {

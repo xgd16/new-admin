@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Chip, Text } from '@heroui/react'
-import ReactECharts from 'echarts-for-react'
+import type { EChartsCoreOption } from 'echarts/core'
 
 import type { DashboardStatDay } from '../api/types'
+import { echarts } from '../lib/echartsCore'
 import { useTheme } from '../theme/themeContext'
 
 export type DashboardFrontUserSummary = {
@@ -14,7 +15,7 @@ export type DashboardFrontUserSummary = {
   inRange: number
 }
 
-/** 前台用户按日新增（ECharts）；可选底部摘要条。 */
+/** 前台用户按日新增（ECharts 按需注册）；可选底部摘要条。 */
 export function DashboardUserTrendChart({
   byDay,
   windowDays,
@@ -27,6 +28,8 @@ export function DashboardUserTrendChart({
   daysHint: string
 }) {
   const { theme, paletteId } = useTheme()
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const chartRef = useRef<ReturnType<typeof echarts.init> | null>(null)
 
   const { categories, values } = useMemo(() => {
     const n = byDay.length
@@ -38,7 +41,7 @@ export function DashboardUserTrendChart({
     return { categories: cats, values: vals }
   }, [byDay])
 
-  const option = useMemo(() => {
+  const option = useMemo((): EChartsCoreOption => {
     void theme
     void paletteId
     const root = document.documentElement
@@ -75,15 +78,35 @@ export function DashboardUserTrendChart({
           name: '前台新增',
           type: 'line',
           smooth: true,
-          symbol: categories.length <= 18 ? ('circle' as const) : 'none',
+          symbol: categories.length <= 18 ? 'circle' : 'none',
           symbolSize: 6,
           lineStyle: { width: 2 },
           areaStyle: { opacity: 0.14 },
           data: values,
         },
       ],
-    } as const
+    }
   }, [theme, paletteId, categories, values])
+
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const chart = echarts.init(el, undefined, { renderer: 'canvas' })
+    chartRef.current = chart
+    const ro = new ResizeObserver(() => chart.resize())
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      chart.dispose()
+      chartRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    chart.setOption(option, { notMerge: true, lazyUpdate: true })
+  }, [option])
 
   return (
     <div className="flex flex-col gap-3">
@@ -93,13 +116,10 @@ export function DashboardUserTrendChart({
           {daysHint}
         </Text>
       </div>
-      <ReactECharts
-        key={`${theme}-${paletteId}`}
-        option={option}
+      <div
+        ref={containerRef}
+        className="min-h-70 w-full"
         style={{ height: 280, width: '100%' }}
-        opts={{ renderer: 'canvas' }}
-        notMerge
-        lazyUpdate
       />
       {summary ? (
         <div className="flex flex-col gap-2 border-t border-border pt-3">

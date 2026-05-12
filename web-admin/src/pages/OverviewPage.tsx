@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 
-import { Alert, Chip, Separator, Text } from '@heroui/react'
+import { Alert, Chip, Separator, Spinner, Text } from '@heroui/react'
 
 import { ADMIN_API_PREFIX, apiRequest } from '../api/client'
 import type { DashboardOverviewData } from '../api/types'
 import { useAuth } from '../auth/authContext'
-import { DashboardUserTrendChart } from '../components/DashboardUserTrendChart'
 import { AnimatePresence, motion, motionTokens } from '../components/motionConfig'
 import type { AdminLayoutOutletContext } from '../layouts/AdminLayout'
+
+const DashboardUserTrendChart = lazy(() =>
+  import('../components/DashboardUserTrendChart').then((m) => ({
+    default: m.DashboardUserTrendChart,
+  })),
+)
 
 type OverviewMetric = {
   label: string
@@ -113,19 +118,30 @@ export function OverviewPage() {
             className="glass-card rounded-xl p-4 sm:p-5 sm:col-span-2"
             {...motionTokens.item}
           >
-            <DashboardUserTrendChart
-              byDay={overview.user_stats.front_new_by_day}
-              windowDays={overview.user_stats.days}
-              summary={{
-                total: overview.user_stats.front_total,
-                enabled: overview.user_stats.front_enabled,
-                disabled: overview.user_stats.front_disabled,
-                today: overview.user_stats.front_new_today,
-                yesterday: overview.user_stats.front_new_yesterday,
-                inRange: overview.user_stats.front_new_in_range,
-              }}
-              daysHint={`近 ${overview.user_stats.days} 个自然日 · 按注册时间`}
-            />
+            <Suspense
+              fallback={
+                <div className="flex min-h-70 items-center justify-center gap-2">
+                  <Spinner size="sm" />
+                  <Text size="sm" variant="muted">
+                    加载图表…
+                  </Text>
+                </div>
+              }
+            >
+              <DashboardUserTrendChart
+                byDay={overview.user_stats.front_new_by_day}
+                windowDays={overview.user_stats.days}
+                summary={{
+                  total: overview.user_stats.front_total,
+                  enabled: overview.user_stats.front_enabled,
+                  disabled: overview.user_stats.front_disabled,
+                  today: overview.user_stats.front_new_today,
+                  yesterday: overview.user_stats.front_new_yesterday,
+                  inRange: overview.user_stats.front_new_in_range,
+                }}
+                daysHint={`近 ${overview.user_stats.days} 个自然日 · 按注册时间`}
+              />
+            </Suspense>
           </motion.article>
         ) : null}
 

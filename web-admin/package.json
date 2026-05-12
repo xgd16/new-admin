@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "release:build": "tsc -b && oxlint && vite build",
+    "build:zip": "rm -rf dist dist.zip && bun run release:build && zip -rq dist.zip dist",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -15,7 +17,6 @@
     "@internationalized/date": "^3.12.1",
     "@tailwindcss/vite": "^4.3.0",
     "echarts": "^6.0.0",
-    "echarts-for-react": "^3.0.6",
     "framer-motion": "^12.38.0",
     "react": "^19.2.6",
     "react-aria-components": "1.17.0",

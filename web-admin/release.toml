@@ -1,0 +1,30 @@
+# web-admin 发布与构建约定（静态资源目录 dist/）
+# 供 CI 或运维对齐：产物路径、Node 版本、生产环境变量。
+# 实际发布流程：先在本目录执行 release:build，再将 dist/ 部署到 CDN / Nginx / 对象存储等。
+
+[package]
+name = "web-admin"
+# 与 package.json 同步；发版时手动或 CI 更新 version
+version_file = "package.json"
+
+[build]
+# 等价于：tsc -b && oxlint && vite build
+npm_script = "release:build"
+output_dir = "dist"
+# 生产 JS 使用 Vite build.minify = oxc（oxc-minify，经 Rolldown）
+js_minify = "oxc"
+# 与 vite@8 engines 对齐；本地/流水线请满足此范围
+node = "^20.19.0 || >=22.12.0"
+
+[env.development]
+# 参见 .env.development（本地通常已 gitignore）
+optional = ["VITE_API_BASE_URL"]
+
+[env.production]
+# 生产构建会加载 .env.production（勿提交真实环境）；示例见 .env.production.example
+required = ["VITE_API_BASE_URL"]
+
+[preview]
+# 本地验收构建产物
+npm_script = "preview"
+listen = "http://localhost:4173"
