@@ -5,8 +5,12 @@ export function buildPaginationItems(page: number, totalPages: number): (number 
     return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
   const pages = new Set<number>([1, totalPages, page - 1, page, page + 1])
-  for (const p of [...pages]) {
-    if (p < 1 || p > totalPages) pages.delete(p)
+  const toDrop: number[] = []
+  for (const p of pages) {
+    if (p < 1 || p > totalPages) toDrop.push(p)
+  }
+  for (const p of toDrop) {
+    pages.delete(p)
   }
   const sorted = [...pages].sort((a, b) => a - b)
   const out: (number | 'ellipsis')[] = []

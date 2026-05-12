@@ -420,7 +420,7 @@ function DualColumnSidebar({
                 </Text>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 pr-1">
-                <RailFlyoutSection nodes={seg.group.children} pathname={pathname} />
+                <RailFlyoutSection nodes={seg.group.children} />
               </div>
             </div>
           </motion.div>
@@ -430,7 +430,7 @@ function DualColumnSidebar({
   )
 }
 
-function RailFlyoutSection({ nodes, pathname }: { nodes: AdminNavNode[]; pathname: string }) {
+function RailFlyoutSection({ nodes }: { nodes: AdminNavNode[] }) {
   const leafCls =
     'nav-item flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left !text-sm font-medium'
   const leafIconCls = 'text-base opacity-90'
@@ -443,7 +443,7 @@ function RailFlyoutSection({ nodes, pathname }: { nodes: AdminNavNode[]; pathnam
             <div className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-(--faint)">
               {node.label}
             </div>
-            <RailFlyoutSection nodes={node.children} pathname={pathname} />
+            <RailFlyoutSection nodes={node.children} />
           </div>
         ) : (
           <NavLink
@@ -485,7 +485,7 @@ function SidebarRailGroup({ group, pathname }: { group: AdminNavGroup; pathname:
             </span>
           </div>
           <div className="max-h-[min(60vh,22rem)] overflow-y-auto p-2">
-            <RailFlyoutSection nodes={group.children} pathname={pathname} />
+            <RailFlyoutSection nodes={group.children} />
           </div>
         </Popover.Dialog>
       </Popover.Content>

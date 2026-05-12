@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {},
+  "env": {
+    "builtin": true,
+    "browser": true
+  },
+  "ignorePatterns": ["dist"],
+  "settings": {
+    "react": {
+      "version": "19.0"
+    }
+  },
+  "options": {
+    "denyWarnings": true,
+    "respectEslintDisableDirectives": true
+  }
+}
